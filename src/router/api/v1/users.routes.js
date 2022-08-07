@@ -1,0 +1,17 @@
+const express = require('express')
+const routes = express.Router()
+const usersController = require('../../../controllers/users.controller')
+const auth = require('../../../middleware/auh')
+routes.route('/signup').post(usersController.signup)
+routes.route('/login').post(usersController.login)
+routes.route('/get-all').get(usersController.getAll)
+routes.route('/get-all-buyers').get(usersController.getAllBuyers)
+routes.route('/get-all-sellers').get(usersController.getAllSellers)
+// routes.delete('/logout', auth, usersController.logout)
+routes.use(auth)
+routes.route('/logout').delete(usersController.logout)
+routes.route('/logout-all-devices').delete(usersController.logoutAll)
+routes.use(usersController.Uploads.single('avatar')).route('/update').patch(usersController.updateUser)
+// routes.delete('/logout-all-devices', auth, usersController.logoutAll)
+
+module.exports = routes;

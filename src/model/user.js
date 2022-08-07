@@ -1,0 +1,136 @@
+const mongoose = require('mongoose')
+const bcryptjs = require('bcryptjs')
+const validator = require('validator')
+const jwt = require('jsonwebtoken')
+const userSchema = mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    phone: {
+        type: String,
+        required: true,
+        unique: true,
+        validate(value) {
+            if (!validator.isMobilePhone(value, ['ar-EG'])) {
+                throw new Error('Phone number is invalid')
+            }
+        }
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error('Email is invalid')
+            }
+        }
+    },
+    password: {
+        type: String,
+        required: true,
+        trim: true,
+        validate(value) {
+            let strongPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])")
+            if (!strongPass.test(value))
+                throw new Error("password must contain at least one capital/small letter & special characters and number")
+        }
+    },
+    address: {
+        type: String,
+        default: '',
+        trim: true
+    },
+    role: {
+        type: String,
+        enum: ['seller', 'buyer'],
+        required: true
+    },
+    status: {
+        type: String,
+        default: 'active',
+        enum: ['active', 'not-active'],
+    },
+    pic: {
+        type: Buffer,
+        default: '',
+    },
+    whatsapp_num: {
+        type: String,
+        default: '01010101010',
+        trim: true,
+        validate(value) {
+            if (!validator.isMobilePhone(value))
+                throw new Error("Phone is invalid")
+        }
+    },
+    facebook: {
+        type: String,
+        default: '',
+        trim: true,
+    },
+    website: {
+        type: String,
+        default: '',
+        trim: true
+    },
+    payment_method: {
+        type: String,
+        default: '',
+        enum: ['', 'vodafone cash', 'orange cash', 'we cash', 'etisalat cash']
+    },
+    payment_method_number: {
+        type: String,
+        default: ''
+    },
+    tokens: [{
+        type: String,
+        required: true
+    }]
+})
+userSchema.virtual('products',{
+    ref:'products',
+    localField:'_id',
+    foreignField:'seller'
+
+})
+userSchema.pre('save', async function () {
+    const user = this
+    if (user.isModified('password'))
+        user.password = await bcryptjs.hash(user.password, 8)
+})
+
+userSchema.statics.Login = async function (mail, pass) {
+    const user = await User.findOne({ email: mail })
+    if (!user)
+        throw new Error('Email is not valid!')
+    const isMatch = await bcryptjs.compare(pass, user.password)
+    if (!isMatch)
+        throw new Error('Password is wrong!')
+    return user
+}
+userSchema.methods.generateToken = async function () {
+    const user = this
+    const token = jwt.sign({ _id: user._id }, 'EazyMoney')
+    user.tokens = user.tokens.concat(token)
+    await user.save()
+    return token
+}
+userSchema.methods.toJSON = function () {
+    const user = this
+    const userObj = user.toObject()
+    return userObj
+
+}
+const validatePassword = async (user ,password)=>{
+    const isMatch = await bcryptjs.compare(password, user.password)
+    console.log(isMatch)
+    // if (!isMatch)
+        // return false
+    return isMatch;
+}
+const User = mongoose.model('users', userSchema)
+module.exports = {User ,validatePassword} ;
