@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const {User} = require('./user')
+const { User } = require('./user')
 const validator = require('validator')
 
 const productSchema = mongoose.Schema({
@@ -40,7 +40,7 @@ const productSchema = mongoose.Schema({
     total_amount: {
         type: Number,
         default: 0,
-        maxLength : [5, "Stock cannot exceed 5 characters" ]
+        maxLength: [5, "Stock cannot exceed 5 characters"]
     },
     rate: {
         type: Number,
@@ -54,26 +54,26 @@ const productSchema = mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: User
     },
-    numOfReviews:{
-        type:Number,
-        default : 0
+    numOfReviews: {
+        type: Number,
+        default: 0
     },
     reviews: [{
-        name:{
-            type:String,
-            required : true,
+        name: {
+            type: String,
+            required: true,
         },
-        rating : {
-            type:Number,
-            required : true,
+        rating: {
+            type: Number,
+            required: true,
         },
-        comment:{
-            type : String ,
+        comment: {
+            type: String,
         }
     }],
-    createdAt:{
-        type : Date,
-        default : Date.now
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 })
 const Product = mongoose.model('products', productSchema)
