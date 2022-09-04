@@ -1,11 +1,12 @@
-const config =  require('./config');
+const config = require('./config')
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-const routes = require('./src/router/index')
-// require('./src/db/db')
-const connectDatabase = require('./src/db/db')
 
+const routes = require('./src/router/index')
+const connectDatabase = require('./src/db/db')
+const errorMiddleWare = require('./src/middleware/error.middleware');
+const ServerError = require('./src/interface/Error');
 // connecting to database
 connectDatabase();
 
@@ -25,4 +26,14 @@ app.get('/', (req, res) => {
 // api routes
 app.use('/api/v1', routes)
 
-app.listen(port, () => console.log(`server running on: http://127.0.0.1:${port}`))
+
+app.use((req, res, next) => {
+  // res.status(404).json({
+  // message: 'page not found.'
+  // })
+  next(ServerError.badRequest(404, 'page not found'))
+  // throw new Error('page not found')
+})
+app.use(errorMiddleWare);
+//server listen
+app.listen(port, () => console.log(`server running on: http://127.0.0.1:`))
