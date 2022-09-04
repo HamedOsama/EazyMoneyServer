@@ -11,7 +11,7 @@ const ServerError = require('./src/interface/Error');
 connectDatabase();
 
 const app = express();
-const port = config.port || 3000
+const port =  3000
 app.use(cors())
 app.use(express.json())
 
