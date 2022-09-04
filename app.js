@@ -35,4 +35,4 @@ app.use((req, res, next) => {
 })
 app.use(errorMiddleWare);
 //server listen
-app.listen(port, () => console.log(`server running on: http://127.0.0.1:${port}`))
+app.listen(port, () => console.log(`server running on: http://127.0.0.1:`))
