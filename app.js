@@ -1,3 +1,4 @@
+const config = require('./config');
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
@@ -10,7 +11,7 @@ const ServerError = require('./src/interface/Error');
 connectDatabase();
 
 const app = express();
-const port = 3000
+const port = config.port || 3000
 app.use(cors())
 app.use(express.json())
 
@@ -35,4 +36,4 @@ app.use((req, res, next) => {
 })
 app.use(errorMiddleWare);
 //server listen
-app.listen(port, () => console.log(`server running on: http://127.0.0.1:`))
+app.listen(port, () => console.log(`server running on: http://127.0.0.1:${port}`))
