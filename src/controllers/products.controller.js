@@ -2,6 +2,7 @@ const multer = require('multer');
 const Product = require('../model/product');
 const auth = require('../middleware/auh');
 const User = require('../model/user');
+const ServerError = require('../interface/Error');
 
 const Uploads = multer({
   fileFilter(req, file, cb) {
@@ -11,10 +12,12 @@ const Uploads = multer({
   },
 });
 
-const createProduct = async (req, res) => {
+
+const createProduct = async (req, res, next) => {
   try {
     if (req.user.role != 'seller') {
-      throw new Error('Error, Must be seller to add product');
+      return next(ServerError.badRequest(403, 'Error, Must be seller to add product'))
+      // throw new Error('Error, Must be seller to add product');
     }
     const product = new Product({ ...req.body, seller: req.user._id });
     if (req.file) {
@@ -25,29 +28,33 @@ const createProduct = async (req, res) => {
     }, 0);
     product.total_amount = sum;
     await product.save();
-    res.status(200).json({
-      status: 200,
-      message: 'Product added successfully.',
-      product,
+    res.status(201).json({
+      ok: true,
+      code: 201,
+      message: 'succeeded',
+      body: product,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
 
-const getAll = async (req, res) => {
+const getAll = async (req, res, next) => {
   try {
-    const product = await Product.find({});
+    const products = await Product.find({});
     res.status(200).json({
-      status: 200,
-      message: 'Product retrieved successfully.',
-      product,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: products,
     });
   } catch (e) {
-    res.status.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status.status(500).send(e.message);
   }
 };
-const getAllCat = async (req, res) => {
+const getAllCat = async (req, res, next) => {
   try {
     const categories = [];
     const product = await Product.find({});
@@ -55,73 +62,84 @@ const getAllCat = async (req, res) => {
       if (!categories.includes(el.category)) categories.push(el.category);
     });
     res.status(200).json({
-      status: 200,
-      message: 'Category retrieved successfully.',
-      categories,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: categories,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const getProductById = async (req, res) => {
+const getProductById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const product = await Product.findById(id);
     res.status(200).json({
-      status: 200,
-      message: 'Product retrieved successfully.',
-      product,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: product,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const getProductsByCategory = async (req, res) => {
+const getProductsByCategory = async (req, res, next) => {
   try {
     const catName = req.params.category;
-    const product = await Product.find({ category: catName });
+    const products = await Product.find({ category: new RegExp(catName, 'i') });
     res.status(200).json({
-      status: 200,
-      message: 'Product retrieved successfully.',
-      product,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: products,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const getProductsByName = async (req, res) => {
+const getProductsByName = async (req, res, next) => {
   try {
     const productName = req.params.name;
     // old way
     // const product = await Product.find({ name: productName });
-    const product = await Product.find({ name: { $regex: new RegExp(productName, "i") } });
+    const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } });
     res.status(200).json({
-      status: 200,
-      message: 'Product retrieved successfully.',
-      product,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: products,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const getProductsBySellerID = async (req, res) => {
+const getProductsBySellerID = async (req, res, next) => {
   try {
-    console.log(1)
     const sellerId = req.params.seller;
     console.log(req.params)
     const products = await Product.find({ seller: sellerId });
     res.status(200).json({
-      status: 200,
-      message: 'Product retrieved successfully.',
-      products,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: products,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
+    if (req.body.seller)
+      throw new Error('sellerId cannot update!');
     const product = await Product.findOneAndUpdate(
       { _id: productId, seller: req.user._id },
       req.body,
@@ -131,19 +149,26 @@ const updateProduct = async (req, res) => {
       }
     );
     if (!product) {
-      res.status(404).send('unable to found');
+      return next(ServerError.badRequest(400, 'product not found'))
+      // throw new Error('cannot find product')
     }
+    const sum = product.properties.reduce((acc, el) => {
+      return acc + el.amount
+    }, 0)
+    product.total_amount = sum;
     await product.save();
     res.status(200).json({
-      status: 200,
-      message: 'Product updated successfully.',
-      product,
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: product,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
     const product = await Product.findOneAndDelete({
@@ -151,27 +176,31 @@ const deleteProduct = async (req, res) => {
       seller: req.user._id,
     });
     if (!product)
-      throw new Error('Invalid ID')
+      return next(ServerError.badRequest(400, 'invalid id'))
+    // throw new Error('Invalid ID')
     // await Product.save();
     res.status(200).json({
-      status: 200,
-      message: 'Product Deleted successfully.',
-      product
+      ok: true,
+      code: 200,
+      message: 'succeeded',
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
-const sellerGetOwn = async (req, res) => {
+const sellerGetOwn = async (req, res, next) => {
   try {
+    console.log(12)
     await req.user.populate('products');
     res.status(200).json({
       status: 200,
-      message: 'Product retrieved successfully.',
-      //req.user.products,
+      message: 'succeeded',
+      data: req.user.products,
     });
   } catch (e) {
-    res.status(500).send(e.message);
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
 module.exports = {

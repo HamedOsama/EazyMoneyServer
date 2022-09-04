@@ -89,12 +89,16 @@ const userSchema = mongoose.Schema({
     tokens: [{
         type: String,
         required: true
-    }]
+    }],
+    resetLink: {
+        type: String,
+        default: ''
+    }
 })
-userSchema.virtual('products',{
-    ref:'products',
-    localField:'_id',
-    foreignField:'seller'
+userSchema.virtual('products', {
+    ref: 'products',
+    localField: '_id',
+    foreignField: 'seller'
 
 })
 userSchema.pre('save', async function () {
@@ -125,12 +129,11 @@ userSchema.methods.toJSON = function () {
     return userObj
 
 }
-const validatePassword = async (user ,password)=>{
+const validatePassword = async (user, password) => {
     const isMatch = await bcryptjs.compare(password, user.password)
-    console.log(isMatch)
     // if (!isMatch)
-        // return false
+    // return false
     return isMatch;
 }
 const User = mongoose.model('users', userSchema)
-module.exports = {User ,validatePassword} ;
+module.exports = { User, validatePassword };
