@@ -5,12 +5,15 @@ const adminController = require('../../../controllers/admin.controller')
 const auth = require('../../../middleware/adminAuth')
 
 // routes do not need for authentication
-routes.route('/add').post(adminController.addAdmin)
 routes.route('/login').post(adminController.login)
+routes.route('/authenticate-login-code').post(adminController.verifyLoginCode)
+// routes.route('/login').post(adminController.verifyLoginCode)
 
+routes.route('/add').post(adminController.Uploads.single('avatar'), adminController.addAdmin)
 // routes.use(auth)
 // routes need for authentication
 // admin controllers
+routes.route('/:id').get(auth, adminController.getAdmin)
 routes.route('/logout').delete(auth, adminController.logout)
 routes.route('/logout-all').delete(auth, adminController.logoutAllDevices)
 //users
@@ -36,6 +39,6 @@ routes.use(adminController.Uploads.single('avatar'))
 //users
 routes.route('/users/update/:id').patch(auth, adminController.updateUser)
 //products
-routes.route('/products/all').post(auth, adminController.addProduct)
+routes.route('/products/add').post(auth, adminController.addProduct)
 
 module.exports = routes

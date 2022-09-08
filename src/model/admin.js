@@ -48,6 +48,9 @@ const adminSchema = mongoose.Schema({
     ],
     LoginCode: {
         type: String
+    },
+    resetpassword:{
+        type:String
     }
 })
 adminSchema.pre('save', async function () {

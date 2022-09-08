@@ -1,8 +1,13 @@
+const config = require('../../config');
 const Admin = require('../model/admin')
 const User = require('../model/user')
 const Product = require('../model/product')
 const multer = require('multer')
 const ServerError = require('../interface/Error')
+const Str = require('@supercharge/strings')
+const sendgrid = require('@sendgrid/mail');
+const e = require('express');
+const sendgridApiKey = config.sendgridApiKey
 
 const Uploads = multer({
   fileFilter(req, file, cb) {
@@ -15,6 +20,8 @@ const addAdmin = async (req, res, next) => {
   try {
     const admin = new Admin(req.body)
     const token = await admin.getToken()
+    if (req.file)
+      req.admin.pic = req.file.buffer
     await admin.save()
     res.status(201).json({
       ok: true,
@@ -29,101 +36,146 @@ const addAdmin = async (req, res, next) => {
     // res.status(500).send(e.message)
   }
 }
-
 const login = async (req, res, next) => {
   try {
     const admin = await Admin.logIn(req.body.email, req.body.password)
+    const random = Str.random(10)
+    await admin.updateOne({ LoginCode: random })
+    // const SENDGRID_API_KEY = "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"
+    console.log(sendgridApiKey)
+    sendgrid.setApiKey(sendgridApiKey)
+    const data = {
+      to: req.body.email,
+      from: 'osamahamed1191@gmail.com',
+      subject: 'verify with this',
+      html: ` <p>${random}</p> `
+    }
+    sendgrid.send(data)
+      .then((response) => {
+        res.status(200).json({
+          ok: true,
+          code: 200,
+          message: 'succeeded',
+          data: 'code has been sent to your email'
+        })
+      })
+      .catch((error) => {
+        return next(ServerError.badRequest(401, error.message))
+      })
+  }
+  catch (e) {
+    next(ServerError.badRequest(401, e.message))
+  }
+}
+const verifyLoginCode = async (req, res, next) => {
+  try {
+    const code = req.body.code
+    const admin = await Admin.logIn(req.body.email, req.body.password)
+    const adminWithLoginCode = await Admin.findOne({ LoginCode: code })
+    if (!adminWithLoginCode)
+      return next(ServerError.badRequest(400, 'code is not valid'))
+    // if (admin.id !== adminWithLoginCode.id)
+    // return next(ServerError.badRequest(400, 'not authenticated'))
+    adminWithLoginCode.LoginCode = null;
+    await admin.save()
     const token = await admin.getToken()
-    const users = (await User.User.count({}));
-    const sellers = (await User.User.count({ role: 'seller' }));
-    const buyers = (await User.User.count({ role: 'buyer' }));
+    const users = (await User.User.countDocuments());
+    // const sellers = (await User.User.count({ role: 'seller' }));
+    const sellers = (await User.User.countDocuments({ role: 'seller' }));
+    const buyers = (await User.User.countDocuments({ role: 'buyer' }));
     // let sellers = 0, buyers = 0;
     // users.forEach(el => el.role === 'seller' ? sellers++ : buyers++);
     // const usersCount = users.length;
     const products = await Product.count({});
-    const usersChart = await User.User.aggregate([
-      {
-        $addFields: {
-          createdAt: {
-            $cond: {
-              if: {
-                $eq: [
-                  {
-                    $type: "$createdAt"
-                  },
-                  "date"
-                ]
-              },
-              "then": "$createdAt",
-              "else": null
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          __alias_0: {
-            year: {
-              $year: "$createdAt"
-            },
-            "month": {
-              "$subtract": [
-                {
-                  "$month": "$createdAt"
-                },
-                1
-              ]
-            }
-          }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            __alias_0: "$__alias_0"
-          },
-          "__alias_1": {
-            $sum: {
-              $cond: [
-                {
-                  $ne: [
-                    {
-                      $type: "$createdAt"
-                    },
-                    "missing"
-                  ]
-                },
-                1,
-                0
-              ]
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          __alias_0: "$_id.__alias_0",
-          __alias_1: 1
-        }
-      },
-      {
-        $project: {
-          x: "$__alias_0",
-          y: "$__alias_1",
-          _id: 0
-        }
-      },
-      {
-        $sort: {
-          "x.year": 1,
-          "x.month": 1
-        }
-      },
-      {
-        $limit: 5000
+    const year = new Date().getFullYear()
+
+
+    // function fillMissing(data) {
+    //   let months = []
+    //   data.forEach(element => {
+    //     months.push(element._id.month)
+    //   });
+    //   console.log(months);
+    //   for (let index = 0; index < 12; index++) {
+    //     if (months.includes(index + 1)) {
+    //       continue
+    //     } else {
+    //       let col = {
+    //         _id: {
+    //           month: index + 1,
+    //           year: "2022"
+    //         },
+    //         num: 0
+    //       }
+    //       data.push(col)
+
+    //     }
+
+    //   }
+    //   data.sort((a, b) => {
+    //     if (a._id['month'] < b._id['month']) {
+    //       return -1;
+    //     }
+    //     if (a._id['month'] > b._id['month']) {
+    //       return 1;
+    //     }
+    //     return 0;
+    //   })
+    //   return data
+
+    // }
+    // const productChart = await Product.aggregate([
+
+    //   {
+    //     $match: {}
+    //   },
+
+    //   {
+    //     $group: {
+    //       _id: {
+    //         month: { $month: "$createdAt" },
+    //         year: { $year: "$createdAt" },
+    //       },
+    //       count: { $sum: 1 }
+    //     }
+    //   },
+
+
+    // ])
+    // const result = fillMissing(productChart)
+
+
+
+
+    const productsChart = new Array(12).fill(0);
+    const createdSellersChart = new Array(12).fill(0);
+    const createdBuyersChart = new Array(12).fill(0);
+    const blockedUsersChart = new Array(12).fill(0);
+    const usersThisUser = (await User.User.find({
+      createdAt: {
+        $gte: new Date(`${year}-1`),
+        $lte: new Date(`${year}-12`)
       }
-    ])
+    }));
+    const productThisYear = await Product.find({
+      createdAt: {
+        $gte: new Date(`${year}-1`),
+        $lte: new Date(`${year}-12`)
+      }
+    })
+    usersThisUser.forEach(el => {
+      const index = el.createdAt.getMonth();
+      el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
+      if (el.status === 'not-active')
+        blockedUsersChart[index]++;
+    })
+    productThisYear.forEach(el => {
+      const index = el.createdAt.getMonth();
+      productsChart[index]++;
+    })
+
+
+
     res.status(200).json({
       ok: true,
       code: 200,
@@ -134,7 +186,15 @@ const login = async (req, res, next) => {
         sellers,
         buyers,
         products,
-        usersChart
+        createdSellersChart,
+        createdBuyersChart,
+        blockedUsersChart,
+        productsChart,
+        // result
+        // productThisYear,
+        // productsChart,
+        // productsChart,
+        // usersChart
       },
       token
     })
@@ -142,6 +202,33 @@ const login = async (req, res, next) => {
   catch (e) {
     next(ServerError.badRequest(401, e.message))
     // res.status(500).send(e.message)
+  }
+}
+
+const getAdmin = async (req, res, next) => {
+  try {
+    const adminId = req.params.id
+    if (adminId.length != 24) {
+      return next(ServerError.badRequest(400, "id is not valid"));
+    }
+    const admin = await Admin.findById({ _id: adminId })
+    if (!admin) {
+      return next(ServerError.badRequest(400, "id is not valid"));
+    }
+    console.log(req.admin.id)
+    console.log(admin.id)
+    if (req.admin.id !== admin.id) {
+      return next(ServerError.badRequest(403, "Not Authorized"));
+    }
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: admin
+    })
+  }
+  catch (e) {
+    next(ServerError.badRequest(500, e.message));
   }
 }
 
@@ -515,7 +602,9 @@ const deleteProduct = async (req, res, next) => {
 module.exports = {
   Uploads,
   addAdmin,
+  getAdmin,
   login,
+  verifyLoginCode,
   logout,
   logoutAllDevices,
   addUser,

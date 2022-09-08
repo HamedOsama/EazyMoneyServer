@@ -3,6 +3,7 @@ const Product = require('../model/product');
 const auth = require('../middleware/auh');
 const User = require('../model/user');
 const ServerError = require('../interface/Error');
+const ApiFeatures = require('../utils/ApiFeatures');
 
 const Uploads = multer({
   fileFilter(req, file, cb) {
@@ -42,7 +43,8 @@ const createProduct = async (req, res, next) => {
 
 const getAll = async (req, res, next) => {
   try {
-    const products = await Product.find({});
+    // const products = await Product.find({});
+    const products = await ApiFeatures.pagination(Product.find({}), req.body.page, req.body.amount)
     res.status(200).json({
       ok: true,
       code: 200,
@@ -90,7 +92,9 @@ const getProductById = async (req, res, next) => {
 const getProductsByCategory = async (req, res, next) => {
   try {
     const catName = req.params.category;
-    const products = await Product.find({ category: new RegExp(catName, 'i') });
+    const products = await ApiFeatures.pagination(Product.find({ category: new RegExp(catName, 'i') })
+      , req.body.page, req.body.amount)
+    // const products = await Product.find({ category: new RegExp(catName, 'i') });
     res.status(200).json({
       ok: true,
       code: 200,
@@ -107,7 +111,11 @@ const getProductsByName = async (req, res, next) => {
     const productName = req.params.name;
     // old way
     // const product = await Product.find({ name: productName });
-    const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } });
+
+    // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } });
+    const products = await ApiFeatures.pagination(
+      Product.find({ name: { $regex: new RegExp(productName, "i") } }),
+      req.body.page, req.body.amount)
     res.status(200).json({
       ok: true,
       code: 200,
@@ -123,7 +131,10 @@ const getProductsBySellerID = async (req, res, next) => {
   try {
     const sellerId = req.params.seller;
     console.log(req.params)
-    const products = await Product.find({ seller: sellerId });
+    // const products = await Product.find({ seller: sellerId });
+    const products = await ApiFeatures.pagination(
+      Product.find({ seller: sellerId }),
+      req.body.page, req.body.amount)
     res.status(200).json({
       ok: true,
       code: 200,
@@ -139,7 +150,8 @@ const updateProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
     if (req.body.seller)
-      throw new Error('sellerId cannot update!');
+      return next(ServerError.badRequest(400, 'sellerId cannot update!'))
+    // throw new Error('sellerId cannot update!');
     const product = await Product.findOneAndUpdate(
       { _id: productId, seller: req.user._id },
       req.body,

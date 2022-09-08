@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const timestamps = require('mongoose-timestamp')
 const bcryptjs = require('bcryptjs')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
@@ -95,6 +96,7 @@ const userSchema = mongoose.Schema({
         default: ''
     }
 })
+userSchema.plugin(timestamps)
 userSchema.virtual('products', {
     ref: 'products',
     localField: '_id',

@@ -22,7 +22,7 @@ const signup = async (req, res, next) => {
       ok: true,
       code: 201,
       message: 'succeeded',
-      data: admin,
+      data: user,
       token
     });
   } catch (e) {

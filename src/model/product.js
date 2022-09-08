@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const timestamps = require('mongoose-timestamp')
 const { User } = require('./user')
 const validator = require('validator')
 
@@ -71,10 +72,11 @@ const productSchema = mongoose.Schema({
             type: String,
         }
     }],
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    // createdAt: {
+    //     type: Date,
+    //     default: Date.now
+    // }
 })
+productSchema.plugin(timestamps)
 const Product = mongoose.model('products', productSchema)
 module.exports = Product
