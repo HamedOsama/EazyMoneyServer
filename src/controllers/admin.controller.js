@@ -150,7 +150,8 @@ const verifyLoginCode = async (req, res, next) => {
     const productsChart = new Array(12).fill(0);
     const createdSellersChart = new Array(12).fill(0);
     const createdBuyersChart = new Array(12).fill(0);
-    const blockedUsersChart = new Array(12).fill(0);
+    const blockedSellersChart = new Array(12).fill(0);
+    const blockedBuyersChart = new Array(12).fill(0);
     const usersThisUser = (await User.User.find({
       createdAt: {
         $gte: new Date(`${year}-1`),
@@ -167,7 +168,7 @@ const verifyLoginCode = async (req, res, next) => {
       const index = el.createdAt.getMonth();
       el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
       if (el.status === 'not-active')
-        blockedUsersChart[index]++;
+        el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
     })
     productThisYear.forEach(el => {
       const index = el.createdAt.getMonth();
@@ -188,7 +189,8 @@ const verifyLoginCode = async (req, res, next) => {
         products,
         createdSellersChart,
         createdBuyersChart,
-        blockedUsersChart,
+        blockedSellersChart,
+        blockedBuyersChart,
         productsChart,
         // result
         // productThisYear,
