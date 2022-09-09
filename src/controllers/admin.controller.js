@@ -7,6 +7,10 @@ const ServerError = require('../interface/Error')
 const Str = require('@supercharge/strings')
 const sendgrid = require('@sendgrid/mail');
 const e = require('express');
+const jwt = require('jsonwebtoken')
+const bcryptjs = require('bcryptjs')
+
+
 const sendgridApiKey = config.sendgridApiKey
 
 const Uploads = multer({
@@ -79,15 +83,11 @@ const verifyLoginCode = async (req, res, next) => {
     adminWithLoginCode.LoginCode = null;
     await admin.save()
     const token = await admin.getToken()
-    const users = (await User.User.countDocuments());
-    // const sellers = (await User.User.count({ role: 'seller' }));
-    const sellers = (await User.User.countDocuments({ role: 'seller' }));
-    const buyers = (await User.User.countDocuments({ role: 'buyer' }));
+
     // let sellers = 0, buyers = 0;
     // users.forEach(el => el.role === 'seller' ? sellers++ : buyers++);
     // const usersCount = users.length;
-    const products = await Product.count({});
-    const year = new Date().getFullYear()
+
 
 
     // function fillMissing(data) {
@@ -145,8 +145,12 @@ const verifyLoginCode = async (req, res, next) => {
     // const result = fillMissing(productChart)
 
 
-
-
+    const users = (await User.User.countDocuments());
+    // const sellers = (await User.User.count({ role: 'seller' }));
+    const sellers = (await User.User.countDocuments({ role: 'seller' }));
+    const buyers = (await User.User.countDocuments({ role: 'buyer' }));
+    const products = await Product.count({});
+    const year = new Date().getFullYear()
     const productsChart = new Array(12).fill(0);
     const createdSellersChart = new Array(12).fill(0);
     const createdBuyersChart = new Array(12).fill(0);
@@ -174,9 +178,6 @@ const verifyLoginCode = async (req, res, next) => {
       const index = el.createdAt.getMonth();
       productsChart[index]++;
     })
-
-
-
     res.status(200).json({
       ok: true,
       code: 200,
@@ -207,30 +208,176 @@ const verifyLoginCode = async (req, res, next) => {
   }
 }
 
-const getAdmin = async (req, res, next) => {
+const getAdminData = async (req, res, next) => {
   try {
-    const adminId = req.params.id
-    if (adminId.length != 24) {
-      return next(ServerError.badRequest(400, "id is not valid"));
+    // const adminId = req.params.id
+    // if (adminId.length != 24) {
+    // return next(ServerError.badRequest(400, "id is not valid"));
+    // }
+    // const admin = await Admin.findById({ _id: adminId })
+    if (!req.admin) {
+      return next(ServerError.badRequest(400, "token is not valid"));
     }
-    const admin = await Admin.findById({ _id: adminId })
-    if (!admin) {
-      return next(ServerError.badRequest(400, "id is not valid"));
-    }
-    console.log(req.admin.id)
-    console.log(admin.id)
-    if (req.admin.id !== admin.id) {
-      return next(ServerError.badRequest(403, "Not Authorized"));
-    }
+    // console.log(req.admin.id)
+    // console.log(admin.id)
+    // if (req.admin.id !== admin.id) {
+    // return next(ServerError.badRequest(403, "Not Authorized"));
+    // }
+    const users = (await User.User.countDocuments());
+    // const sellers = (await User.User.count({ role: 'seller' }));
+    const sellers = (await User.User.countDocuments({ role: 'seller' }));
+    const buyers = (await User.User.countDocuments({ role: 'buyer' }));
+    const products = await Product.count({});
+    const year = new Date().getFullYear()
+    const productsChart = new Array(12).fill(0);
+    const createdSellersChart = new Array(12).fill(0);
+    const createdBuyersChart = new Array(12).fill(0);
+    const blockedSellersChart = new Array(12).fill(0);
+    const blockedBuyersChart = new Array(12).fill(0);
+    const usersThisUser = (await User.User.find({
+      createdAt: {
+        $gte: new Date(`${year}-1`),
+        $lte: new Date(`${year}-12`)
+      }
+    }));
+    const productThisYear = await Product.find({
+      createdAt: {
+        $gte: new Date(`${year}-1`),
+        $lte: new Date(`${year}-12`)
+      }
+    })
+    usersThisUser.forEach(el => {
+      const index = el.createdAt.getMonth();
+      el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
+      if (el.status === 'not-active')
+        el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
+    })
+    productThisYear.forEach(el => {
+      const index = el.createdAt.getMonth();
+      productsChart[index]++;
+    })
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: admin
+      data: req.admin,
+      users,
+      sellers,
+      buyers,
+      products,
+      productsChart,
+      createdSellersChart,
+      createdBuyersChart,
+      blockedSellersChart,
+      blockedBuyersChart,
+
     })
   }
   catch (e) {
     next(ServerError.badRequest(500, e.message));
+  }
+}
+
+
+const forgetPassword = async (req, res, next) => {
+  try {
+    const email = req.body.email
+    if (!email) {
+      return next(ServerError.badRequest(400, 'please put email parameter in body'))
+    }
+    const url = 'http://localhost:3000'
+    const admin = Admin.findOne({ email }, (err, admin) => {
+      if (err || !admin) {
+        return next(ServerError.badRequest(400, 'email is not valid'))
+        // return res.status(404).send('admin with this email dose not exist')
+      }
+      const token = jwt.sign({ _id: admin._id }, 'adminPassword', { expiresIn: '20m' })
+
+      // const SENDGRID_API_KEY = "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"
+      sendgrid.setApiKey(sendgridApiKey)
+      const data = {
+        to: email,
+        from: {
+          name: 'easy money',
+          email: 'osamahamed1191@gmail.com'
+        },
+        subject: 'Account reset password Link',
+        html: ` <h2>Please click on given Link to reset your password</h2>  
+                    <p> ${url}/auth/reset-password/${token} </p> 
+              `
+      }
+      admin.updateOne({ resetpassword: token }, function (err, success) {
+        if (err) {
+          return next(ServerError.badRequest(500, 'please try again'))
+          // return res.status(400).json({ err: 'reset password link error' })
+        }
+        else {
+          sendgrid.send(data)
+
+            .then((response) => {
+              res.status(200).json(
+                {
+                  ok: true,
+                  code: 200,
+                  message: 'succeeded',
+                  data: 'email has been sent'
+                }
+              )
+            })
+            .catch((error) => {
+              next(ServerError.badRequest(500, error.message))
+              // res.json(error.message)
+            })
+        }
+      })
+    })
+  }
+  catch (e) {
+    next(ServerError.badRequest(500, e.message))
+
+    // res.status(400).send(e.message)
+  }
+}
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const resetLink = req.params.token
+    const newPassword = req.body.password
+    if (!newPassword) {
+      return next(ServerError.badRequest(401, 'please send password'))
+    }
+    if (resetLink) {
+      jwt.verify(resetLink, 'adminPassword', async function (err, decoded) {
+        if (err) {
+          return next(ServerError.badRequest(401, 'token is not correct'))
+          // return res.status(401).json({ error: 'Incorrect token or it is expired' })
+        }
+        //const admin=await Admin.findOne({resetpassword:resetLink})
+        const admin = await Admin.findOneAndUpdate({ resetpassword: resetLink }, { ...req.body, resetpassword: '' }, {
+          new: true,
+          runValidators: true
+        })
+        console.log(admin)
+        admin.password = await bcryptjs.hash(newPassword, 8)
+        admin.save()
+        return res.json(
+          {
+            ok: true,
+            code: 200,
+            message: 'succeeded',
+            data: 'your password is successfully changed'
+          }
+        )
+      })
+    }
+    else {
+      return next(ServerError.badRequest(401, 'authentication error'))
+      // res.status(401).json({ error: 'Authentication error!' })
+    }
+  }
+  catch (e) {
+    next(ServerError.badRequest(401, e.message))
+    // res.status(400).send(e.message)
   }
 }
 
@@ -604,11 +751,13 @@ const deleteProduct = async (req, res, next) => {
 module.exports = {
   Uploads,
   addAdmin,
-  getAdmin,
+  getAdminData,
   login,
   verifyLoginCode,
   logout,
   logoutAllDevices,
+  forgetPassword,
+  resetPassword,
   addUser,
   getAllUsers,
   getAllBuyers,

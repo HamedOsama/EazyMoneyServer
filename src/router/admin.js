@@ -340,31 +340,73 @@ router.delete('/admin/product/delete/:id', auth, async (req, res) => {
 router.put('/admin/forgetpass', async (req, res) => {
     try {
         const email = req.body.email
-        const admin = await Admin.findOne({ email })
-        if (!admin) {
-            return res.status(404).send('admin with this email dose not exist')
-        }
-        await admin.updateOne({ resetpassword: 'true' })
-        res.status(200).send('can you reset password')
+        const url = 'http://localhost:4200'
+        const admin = Admin.findOne({ email }, (err, admin) => {
+            if (err || !admin) {
+                return res.status(404).send('admin with this email dose not exist')
+            }
+            const token = jwt.sign({ _id: admin._id }, 'adminPassword', { expiresIn: '20m' })
+
+            const SENDGRID_API_KEY = "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"
+            sendgrid.setApiKey(SENDGRID_API_KEY)
+            const data = {
+                to: email,
+                from: {
+                    name: 'eazymoney',
+                    email: 'reemabdulnaby00@gmail.com'
+                },
+                subject: 'Account reset password Link',
+                html: ` <h2>Please click on given Link to reset your password</h2>  
+                      <p> ${url}/auth/reset-password/${token} </p> 
+                `
+            }
+            admin.updateOne({ resetpassword: token }, function (err, success) {
+                if (err) {
+                    return res.status(400).json({ err: 'reset password link error' })
+                }
+                else {
+                    sendgrid.send(data)
+
+                        .then((response) => {
+                            res.status(200).json({ response: 'email has been sent' })
+                        })
+                        .catch((error) => {
+                            res.json(error.message)
+                        })
+                }
+            })
+        })
     }
+
     catch (e) {
-        res.status(500).send(e.message)
+        res.status(400).send(e.message)
     }
 })
-router.put('/admin/resetpass', async (req, res) => {
+router.put('/admin/resetpassword/:token', async (req, res) => {
     try {
-
-        const admin = await Admin.findOne({ resetpassword: 'true' }, { ...req.body, resetpassword: '' }, {
-            new: true,
-            runValidators: true
-        })
-        admin.password = await bcryptjs.hash(admin.password, 8)
-        await admin.save()
-        res.status(200).send('updated succefuly')
-
+        const resetlink = req.params.token
+        if (resetlink) {
+            jwt.verify(resetlink, 'adminPassword', async function (err, decoded) {
+                if (err) {
+                    return res.status(401).json({ error: 'Incorrect token or it is expired' })
+                }
+                //const admin=await Admin.findOne({resetpassword:resetlink})
+                const admin = await Admin.findOneAndUpdate({ resetpassword: resetlink }, { ...req.body, resetpassword: '' }, {
+                    new: true,
+                    runValidators: true
+                })
+                console.log(admin)
+                admin.password = await bcryptjs.hash(admin.password, 8)
+                admin.save()
+                return res.json({ message: 'your password is successfuly changed' })
+            })
+        }
+        else {
+            res.status(401).json({ error: 'Authentication error!' })
+        }
     }
     catch (e) {
-        res.status(500).send(e.message)
+        res.status(400).send(e.message)
     }
 })
 router.get('/admin/getById/:id', auth, async (req, res) => {
