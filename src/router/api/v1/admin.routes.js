@@ -28,9 +28,9 @@ routes.route('/users/logout').delete(auth, adminController.logoutUserFromAllDevi
 //products
 routes.route('/products/categories/all').get(auth, adminController.getAllCategories)
 routes.route('/products/all').get(auth, adminController.getAllProducts)
-routes.route('/products/product/:id').get(auth, adminController.getProductById)
-routes.route('/products/product/:cat').get(auth, adminController.getProductsByCategory)
-routes.route('/products/product/:name').get(auth, adminController.getProductsByName)
+routes.route('/products/id/:id').get(auth, adminController.getProductById)
+routes.route('/products/category/:cat').get(auth, adminController.getProductsByCategory)
+routes.route('/products/name/:name').get(auth, adminController.getProductsByName)
 routes.route('/products/product/seller/:id').get(auth, adminController.getSellerOfProduct)
 routes.route('/products/product/:id').patch(auth, adminController.updateProduct)
 routes.route('/products/product/:id').delete(auth, adminController.deleteProduct)
