@@ -49,8 +49,8 @@ const adminSchema = mongoose.Schema({
     LoginCode: {
         type: String
     },
-    resetpassword:{
-        type:String
+    resetpassword: {
+        type: String
     }
 })
 adminSchema.pre('save', async function () {
@@ -63,6 +63,7 @@ adminSchema.statics.logIn = async function (email, pass) {
     if (!admin) {
         throw new Error('Password or Email is wrong')
     }
+    console.log(admin.password)
     const isMatch = await bcryptjs.compare(pass, admin.password)
     if (!isMatch)
         throw new Error('Password or Email is wrong')

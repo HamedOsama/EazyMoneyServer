@@ -8,10 +8,9 @@ const Str = require('@supercharge/strings')
 const sendgrid = require('@sendgrid/mail');
 const e = require('express');
 const jwt = require('jsonwebtoken')
-const bcryptjs = require('bcryptjs')
-
-
-const sendgridApiKey = config.sendgridApiKey
+const bcryptjs = require('bcryptjs');
+const ApiFeatures = require('../utils/ApiFeatures');
+const { sendgridApiKey, sendgridEmail } = config
 
 const Uploads = multer({
   fileFilter(req, file, cb) {
@@ -50,7 +49,7 @@ const login = async (req, res, next) => {
     sendgrid.setApiKey(sendgridApiKey)
     const data = {
       to: req.body.email,
-      from: 'osamahamed1191@gmail.com',
+      from: sendgridEmail,
       subject: 'verify with this',
       html: ` <p>${random}</p> `
     }
@@ -299,7 +298,7 @@ const forgetPassword = async (req, res, next) => {
         to: email,
         from: {
           name: 'easy money',
-          email: 'osamahamed1191@gmail.com'
+          email: sendgridEmail
         },
         subject: 'Account reset password Link',
         html: ` <h2>Please click on given Link to reset your password</h2>  
@@ -352,26 +351,65 @@ const resetPassword = async (req, res, next) => {
           return next(ServerError.badRequest(401, 'token is not correct'))
           // return res.status(401).json({ error: 'Incorrect token or it is expired' })
         }
-        //const admin=await Admin.findOne({resetpassword:resetLink})
-        const admin = await Admin.findOneAndUpdate({ resetpassword: resetLink }, { ...req.body, resetpassword: '' }, {
+        const admin = await Admin.findOne({ resetpassword: resetLink })
+        if (!admin) {
+          return next(ServerError.badRequest(401, 'token is not correct'))
+          // res.status(401).send('unable to found')
+        }
+
+
+        // const hashedPass = bcryptjs.hashSync(newPassword, 8);
+        // console.log(hashedPass);
+        // admin.password = newPassword;
+        // admin.resetpassword = ''
+        // await admin.save();
+
+
+        // res.json(
+        //   {
+        //     ok: true,
+        //     code: 200,
+        //     message: 'succeeded',
+        //     data: 'your password is successfully changed'
+        //   }
+        // )
+        // // const hashedPassword =
+        await admin.updateOne({ password: newPassword }, {
           new: true,
-          runValidators: true
-        })
-        console.log(admin)
-        admin.password = await bcryptjs.hash(newPassword, 8)
-        admin.save()
-        return res.json(
-          {
-            ok: true,
-            code: 200,
-            message: 'succeeded',
-            data: 'your password is successfully changed'
+          runValidators: true,
+        }, async (err, data) => {
+          if (err) {
+            next(ServerError.badRequest(401, e.message))
+            // return res.send(err.message)
           }
-        )
+          // else if (!newPassword) {
+          // next(ServerError.badRequest(401, e.message))
+          // return res.send('please send your new password')
+          // }
+          else if (data) {
+            console.log(admin.password)
+            console.log()
+            admin.password = newPassword;
+            console.log(admin.password)
+            // admin.resetpassword = ''
+            await admin.save()
+            const match = await bcryptjs.compare(newPassword, admin.password);
+            console.log(match)
+            res.json(
+              {
+                ok: true,
+                code: 200,
+                message: 'succeeded',
+                data: 'your password is successfully changed'
+              }
+            )
+          }
+        })
+
       })
     }
     else {
-      return next(ServerError.badRequest(401, 'authentication error'))
+      next(ServerError.badRequest(401, 'Authentication error!'))
       // res.status(401).json({ error: 'Authentication error!' })
     }
   }
@@ -461,7 +499,10 @@ const updateUser = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find({})
+    const users = await ApiFeatures.pagination(
+      User.User.find({}),
+      req.body.page, req.body.amount
+    )
     res.status(200).json({
       ok: true,
       code: 200,
@@ -477,8 +518,12 @@ const getAllUsers = async (req, res, next) => {
 
 const getAllBuyers = async (req, res, next) => {
   try {
-    const user = await User.find({})
-    const buyers = user.filter(el => { return el.role == 'buyer' })
+    // const user = await User.find({})
+    // const buyers = user.filter(el => { return el.role == 'buyer' })
+    const buyers = await ApiFeatures.pagination(
+      User.User.find({ role: 'buyer' }),
+      req.body.page, req.body.amount
+    )
     res.status(200).json({
       ok: true,
       code: 200,
@@ -494,8 +539,12 @@ const getAllBuyers = async (req, res, next) => {
 
 const getAllSellers = async (req, res, next) => {
   try {
-    const user = await User.find({})
-    const sellers = user.filter(el => { return el.role == 'seller' })
+    // const user = await User.find({})
+    // const sellers = user.filter(el => { return el.role == 'seller' })
+    const sellers = await ApiFeatures.pagination(
+      User.User.find({ role: 'seller' }),
+      req.body.page, req.body.amount
+    )
     res.status(200).json({
       ok: true,
       code: 200,
@@ -603,10 +652,15 @@ const getAllCategories = async (req, res, next) => {
 const getAllProducts = async (req, res, next) => {
   try {
 
-    const limitValue = req.query.limit || 10;
-    const skipValue = req.query.skip || 0;
-    const products = await Product.find()
-      .limit(limitValue).skip(skipValue);
+    // const limitValue = req.query.limit || 10;
+    // const skipValue = req.query.skip || 0;
+    // const products = await Product.find()
+    //   .limit(limitValue).skip(skipValue);
+
+    const products = await ApiFeatures.pagination(
+      products.find({}),
+      req.body.page, req.body.amount
+    )
     res.status(200).json({
       ok: true,
       code: 200,
@@ -644,8 +698,12 @@ const getProductById = async (req, res, next) => {
 const getProductsByCategory = async (req, res, next) => {
   try {
     const catName = req.params.cat
-    const products = await Product.find({ category: { $regex: new RegExp(catName, "i") } })
+    // const products = await Product.find({ category: { $regex: new RegExp(catName, "i") } })
 
+    const products = await ApiFeatures.pagination(
+      products.find({ category: { $regex: new RegExp(catName, "i") } }),
+      req.body.page, req.body.amount
+    )
     res.status(200).json({
       ok: true,
       code: 200,
@@ -662,8 +720,11 @@ const getProductsByCategory = async (req, res, next) => {
 const getProductsByName = async (req, res, next) => {
   try {
     const productName = req.params.name
-    const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } })
-
+    // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } })
+    const products = await ApiFeatures.pagination(
+      products.find({ name: { $regex: new RegExp(catName, "i") } }),
+      req.body.page, req.body.amount
+    )
     res.status(200).json({
       ok: true,
       code: 200,

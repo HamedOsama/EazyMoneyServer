@@ -9,7 +9,7 @@ routes.route('/login').post(adminController.login)
 routes.route('/authenticate-login-code').post(adminController.verifyLoginCode)
 // routes.route('/login').post(adminController.verifyLoginCode)
 
-routes.route('/add').post(adminController.Uploads.single('avatar'), adminController.getAdminData)
+routes.route('/add').post(adminController.Uploads.single('avatar'), adminController.addAdmin)
 routes.route('/forget-password').put(adminController.forgetPassword)
 routes.route('/reset-password/:token').put(adminController.resetPassword)
 // routes.use(auth)

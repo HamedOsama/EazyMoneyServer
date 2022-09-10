@@ -384,21 +384,35 @@ router.put('/admin/forgetpass', async (req, res) => {
 })
 router.put('/admin/resetpassword/:token', async (req, res) => {
     try {
+
         const resetlink = req.params.token
+        const newPassword = req.body.password
         if (resetlink) {
             jwt.verify(resetlink, 'adminPassword', async function (err, decoded) {
                 if (err) {
                     return res.status(401).json({ error: 'Incorrect token or it is expired' })
                 }
-                //const admin=await Admin.findOne({resetpassword:resetlink})
-                const admin = await Admin.findOneAndUpdate({ resetpassword: resetlink }, { ...req.body, resetpassword: '' }, {
+                const admin = await Admin.findOne({ resetpassword: resetlink })
+                if (!admin) {
+                    res.status(401).send('unable to found')
+                }
+                await admin.updateOne({ password: newPassword }, {
                     new: true,
-                    runValidators: true
+                    runValidators: true,
+                }, async (err, date) => {
+                    if (err) {
+                        return res.send(err.message)
+                    }
+                    else if (!newPassword) {
+                        return res.send('please send your new password')
+                    }
+                    else if (date) {
+                        admin.password = await bcryptjs.hash(admin.password, 8)
+                        admin.resetpassword = ''
+                        await admin.save()
+                        res.json({ message: 'your password is successfuly changed' })
+                    }
                 })
-                console.log(admin)
-                admin.password = await bcryptjs.hash(admin.password, 8)
-                admin.save()
-                return res.json({ message: 'your password is successfuly changed' })
             })
         }
         else {
