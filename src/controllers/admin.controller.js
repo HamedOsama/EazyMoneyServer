@@ -73,6 +73,8 @@ const login = async (req, res, next) => {
 const verifyLoginCode = async (req, res, next) => {
   try {
     const code = req.body.code
+    if (code.length !== 10)
+      return next(ServerError.badRequest(400, 'code is not valid'))
     const admin = await Admin.logIn(req.body.email, req.body.password)
     const adminWithLoginCode = await Admin.findOne({ LoginCode: code })
     if (!adminWithLoginCode)
@@ -390,11 +392,11 @@ const resetPassword = async (req, res, next) => {
             console.log(admin.password)
             console.log()
             admin.password = newPassword;
-            console.log(admin.password)
+            // console.log(admin.password)
             // admin.resetpassword = ''
             await admin.save()
-            const match = await bcryptjs.compare(newPassword, admin.password);
-            console.log(match)
+            // const match = await bcryptjs.compare(newPassword, admin.password);
+            // console.log(match)
             res.json(
               {
                 ok: true,
@@ -658,7 +660,7 @@ const getAllProducts = async (req, res, next) => {
     //   .limit(limitValue).skip(skipValue);
 
     const products = await ApiFeatures.pagination(
-      products.find({}),
+      Product.find({}),
       req.body.page, req.body.amount
     )
     res.status(200).json({
@@ -701,7 +703,7 @@ const getProductsByCategory = async (req, res, next) => {
     // const products = await Product.find({ category: { $regex: new RegExp(catName, "i") } })
 
     const products = await ApiFeatures.pagination(
-      products.find({ category: { $regex: new RegExp(catName, "i") } }),
+      Product.find({ category: { $regex: new RegExp(catName, "i") } }),
       req.body.page, req.body.amount
     )
     res.status(200).json({
@@ -722,7 +724,7 @@ const getProductsByName = async (req, res, next) => {
     const productName = req.params.name
     // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } })
     const products = await ApiFeatures.pagination(
-      products.find({ name: { $regex: new RegExp(catName, "i") } }),
+      Product.find({ name: { $regex: new RegExp(catName, "i") } }),
       req.body.page, req.body.amount
     )
     res.status(200).json({
