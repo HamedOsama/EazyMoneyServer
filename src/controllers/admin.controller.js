@@ -738,7 +738,7 @@ const getProductsByName = async (req, res, next) => {
     const productName = req.params.name
     // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } })
     const products = await ApiFeatures.pagination(
-      Product.find({ name: { $regex: new RegExp(catName, "i") } }),
+      Product.find({ name: { $regex: new RegExp(productName, "i") } }),
       req.query
     )
     const totalLength = await Product.countDocuments();
