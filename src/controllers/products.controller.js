@@ -44,7 +44,7 @@ const createProduct = async (req, res, next) => {
 const getAll = async (req, res, next) => {
   try {
     // const products = await Product.find({});
-    const products = await ApiFeatures.pagination(Product.find({}), req.body.page, req.body.amount)
+    const products = await ApiFeatures.pagination(Product.find({}), req.query)
     res.status(200).json({
       ok: true,
       code: 200,
@@ -93,7 +93,7 @@ const getProductsByCategory = async (req, res, next) => {
   try {
     const catName = req.params.category;
     const products = await ApiFeatures.pagination(Product.find({ category: new RegExp(catName, 'i') })
-      , req.body.page, req.body.amount)
+      , req.query)
     // const products = await Product.find({ category: new RegExp(catName, 'i') });
     res.status(200).json({
       ok: true,
@@ -115,7 +115,7 @@ const getProductsByName = async (req, res, next) => {
     // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } });
     const products = await ApiFeatures.pagination(
       Product.find({ name: { $regex: new RegExp(productName, "i") } }),
-      req.body.page, req.body.amount)
+      req.query)
     res.status(200).json({
       ok: true,
       code: 200,
