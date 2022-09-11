@@ -2,10 +2,11 @@ class ApiFeatures {
   constructor(query) {
     this.query = query;
   }
-  static async pagination(query, pageNum, resultPerPage = 10) {
-    const currentPage = +pageNum || 1;
-    const skip = +resultPerPage * (currentPage - 1);
-    const newQuery = await query.limit(+resultPerPage).skip(skip)
+  static async pagination(query, reqQuery) {
+    const currentPage = +reqQuery.page || 1;
+    const limit = +reqQuery.limit || 10
+    const skip = limit * (currentPage - 1);
+    const newQuery = await query.limit(limit).skip(skip)
     return newQuery;
   }
 }

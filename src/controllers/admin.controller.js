@@ -75,15 +75,15 @@ const verifyLoginCode = async (req, res, next) => {
     const code = req.body.code
     if (code.length !== 10)
       return next(ServerError.badRequest(400, 'code is not valid'))
-    const admin = await Admin.logIn(req.body.email, req.body.password)
+    // const admin = await Admin.logIn(req.body.email, req.body.password)
     const adminWithLoginCode = await Admin.findOne({ LoginCode: code })
     if (!adminWithLoginCode)
       return next(ServerError.badRequest(400, 'code is not valid'))
     // if (admin.id !== adminWithLoginCode.id)
     // return next(ServerError.badRequest(400, 'not authenticated'))
     adminWithLoginCode.LoginCode = null;
-    await admin.save()
-    const token = await admin.getToken()
+    await adminWithLoginCode.save()
+    const token = await adminWithLoginCode.getToken()
 
     // let sellers = 0, buyers = 0;
     // users.forEach(el => el.role === 'seller' ? sellers++ : buyers++);
@@ -184,7 +184,7 @@ const verifyLoginCode = async (req, res, next) => {
       code: 200,
       message: 'succeeded',
       data: {
-        admin,
+        admin: adminWithLoginCode,
         users,
         sellers,
         buyers,
@@ -393,7 +393,7 @@ const resetPassword = async (req, res, next) => {
             console.log()
             admin.password = newPassword;
             // console.log(admin.password)
-            // admin.resetpassword = ''
+            admin.resetpassword = ''
             await admin.save()
             // const match = await bcryptjs.compare(newPassword, admin.password);
             // console.log(match)
@@ -503,13 +503,15 @@ const getAllUsers = async (req, res, next) => {
   try {
     const users = await ApiFeatures.pagination(
       User.User.find({}),
-      req.body.page, req.body.amount
+      req.query
     )
+    const totalLength = await User.User.find({});
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       data: users,
+      totalLength,
     })
   }
   catch (e) {
@@ -524,13 +526,15 @@ const getAllBuyers = async (req, res, next) => {
     // const buyers = user.filter(el => { return el.role == 'buyer' })
     const buyers = await ApiFeatures.pagination(
       User.User.find({ role: 'buyer' }),
-      req.body.page, req.body.amount
+      req.query
     )
+    const totalLength = await User.User.find({ role: 'buyer' });
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: buyers
+      data: buyers,
+      totalLength
     })
   }
   catch (e) {
@@ -545,13 +549,15 @@ const getAllSellers = async (req, res, next) => {
     // const sellers = user.filter(el => { return el.role == 'seller' })
     const sellers = await ApiFeatures.pagination(
       User.User.find({ role: 'seller' }),
-      req.body.page, req.body.amount
+      req.query
     )
+    const totalLength = await User.User.find({ role: 'seller' });
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: sellers
+      data: sellers,
+      totalLength
     })
   }
   catch (e) {
@@ -563,6 +569,8 @@ const getAllSellers = async (req, res, next) => {
 const logoutUserFromAllDevices = async (req, res, next) => {
   try {
     const userID = req.params.id
+    if (!userID)
+      return next(ServerError.badRequest(400, 'please send id'))
     const user = await User.findById({ _id: userID })
     user.tokens = []
     await user.save()
@@ -583,6 +591,8 @@ const getUser = async (req, res, next) => {
   try {
 
     const userId = req.params.id
+    if (!userID)
+      return next(ServerError.badRequest(400, 'please send id'))
     const user = await User.findById(userId)
     if (!user) {
       return next(ServerError.badRequest(400, 'unable to find any user match this ID'))
@@ -658,16 +668,18 @@ const getAllProducts = async (req, res, next) => {
     // const skipValue = req.query.skip || 0;
     // const products = await Product.find()
     //   .limit(limitValue).skip(skipValue);
-
+    // console.log(req.query)
     const products = await ApiFeatures.pagination(
       Product.find({}),
-      req.body.page, req.body.amount
+      req.query
     )
+    const totalLength = await Product.countDocuments();
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: products
+      data: products,
+      totalLength,
     })
   }
   catch (e) {
@@ -704,13 +716,15 @@ const getProductsByCategory = async (req, res, next) => {
 
     const products = await ApiFeatures.pagination(
       Product.find({ category: { $regex: new RegExp(catName, "i") } }),
-      req.body.page, req.body.amount
+      req.query
     )
+    const totalLength = await Product.countDocuments();
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: products
+      data: products,
+      totalLength
     })
   }
   catch (e) {
@@ -725,13 +739,16 @@ const getProductsByName = async (req, res, next) => {
     // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } })
     const products = await ApiFeatures.pagination(
       Product.find({ name: { $regex: new RegExp(catName, "i") } }),
-      req.body.page, req.body.amount
+      req.query
     )
+    const totalLength = await Product.countDocuments();
+
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: products
+      data: products,
+      totalLength
     })
 
   }

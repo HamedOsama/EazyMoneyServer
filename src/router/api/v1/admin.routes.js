@@ -24,7 +24,7 @@ routes.route('/users/user/:id').get(auth, adminController.getUser)
 routes.route('/users/all').get(auth, adminController.getAllUsers)
 routes.route('/users/buyers').get(auth, adminController.getAllBuyers)
 routes.route('/users/sellers').get(auth, adminController.getAllSellers)
-routes.route('/users/logout').delete(auth, adminController.logoutUserFromAllDevices)
+routes.route('/users/logout/:id').delete(auth, adminController.logoutUserFromAllDevices)
 //products
 routes.route('/products/categories/all').get(auth, adminController.getAllCategories)
 routes.route('/products/all').get(auth, adminController.getAllProducts)
@@ -32,7 +32,6 @@ routes.route('/products/id/:id').get(auth, adminController.getProductById)
 routes.route('/products/category/:cat').get(auth, adminController.getProductsByCategory)
 routes.route('/products/name/:name').get(auth, adminController.getProductsByName)
 routes.route('/products/product/seller/:id').get(auth, adminController.getSellerOfProduct)
-routes.route('/products/product/:id').patch(auth, adminController.updateProduct)
 routes.route('/products/product/:id').delete(auth, adminController.deleteProduct)
 
 
@@ -42,5 +41,7 @@ routes.use(adminController.Uploads.single('avatar'))
 routes.route('/users/update/:id').patch(auth, adminController.updateUser)
 //products
 routes.route('/products/add').post(auth, adminController.addProduct)
+routes.route('/products/product/:id').patch(auth, adminController.updateProduct)
+
 
 module.exports = routes
