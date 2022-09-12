@@ -37,8 +37,9 @@ const adminSchema = mongoose.Schema({
                 throw new Error("Phone is invalid")
         }
     },
-    pic: {
-        type: Buffer
+    image: {
+        type: String,
+        default: '',
     },
     token: [
         {

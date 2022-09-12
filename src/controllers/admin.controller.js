@@ -24,7 +24,7 @@ const addAdmin = async (req, res, next) => {
     const admin = new Admin(req.body)
     const token = await admin.getToken()
     if (req.file)
-      req.admin.pic = req.file.buffer
+      req.admin.image = req.file.filename
     await admin.save()
     res.status(201).json({
       ok: true,
@@ -476,14 +476,16 @@ const addUser = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const userID = req.params.id
-    const user = await User.findById({ _id: userID })
+    const user = await User.User.findById(userID)
     if (!user)
       return next(ServerError.badRequest(400, 'user not found'))
     // res.status(404).send('unable to found')
     const Updates = Object.keys(req.body)
     Updates.forEach((update) => { user[update] = req.body[update] })
-    if (req.file)
-      user.pic = req.file.buffer
+    if (req.file) {
+      user.image = req.file.filename
+      console.log(req.file)
+    }
 
     await user.save()
     res.status(200).json({
@@ -591,9 +593,9 @@ const getUser = async (req, res, next) => {
   try {
 
     const userId = req.params.id
-    if (!userID)
+    if (!userId)
       return next(ServerError.badRequest(400, 'please send id'))
-    const user = await User.findById(userId)
+    const user = await User.User.findById(userId)
     if (!user) {
       return next(ServerError.badRequest(400, 'unable to find any user match this ID'))
       // res.status(404).send("unable to found any user match this ID")
@@ -615,8 +617,12 @@ const getUser = async (req, res, next) => {
 const addProduct = async (req, res, next) => {
   try {
     const product = new Product(req.body)
-    if (req.file) {
-      product.image = req.file.buffer
+    const filesPaths = []
+    if (req.files) {
+      for (let i = 0; i < req.files.length; i++) {
+        filesPaths.push(req.files[i].filename)
+      }
+      product.image = filesPaths
     }
     const sum = product.properties.reduce((accumulator, object) => {
       return accumulator + object.amount;
@@ -789,7 +795,13 @@ const updateProduct = async (req, res, next) => {
       new: true,
       runValidators: true
     })
-
+    const filesPaths = []
+    if (req.files) {
+      for (let i = 0; i < req.files.length; i++) {
+        filesPaths.push(req.files[i].filename)
+      }
+      product.image = filesPaths
+    }
     const sum = product.properties.reduce((accumulator, object) => {
       return accumulator + object.amount;
     }, 0);

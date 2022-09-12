@@ -55,8 +55,8 @@ const userSchema = mongoose.Schema({
         default: 'active',
         enum: ['active', 'not-active'],
     },
-    photo: {
-        type: Buffer,
+    image: {
+        type: String,
         default: '',
     },
     whatsapp_num: {

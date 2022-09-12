@@ -1,15 +1,15 @@
 const express = require('express')
 const routes = express.Router()
 const adminController = require('../../../controllers/admin.controller')
-
 const auth = require('../../../middleware/adminAuth')
+const Uploads = require('../../../utils/uploadPhoto')
 
 // routes do not need for authentication
 routes.route('/login').post(adminController.login)
 routes.route('/authenticate-login-code').post(adminController.verifyLoginCode)
 // routes.route('/login').post(adminController.verifyLoginCode)
 
-routes.route('/add').post(adminController.Uploads.single('avatar'), adminController.addAdmin)
+routes.route('/add').post(Uploads.single('avatar'), adminController.addAdmin)
 routes.route('/forget-password').put(adminController.forgetPassword)
 routes.route('/reset-password/:token').put(adminController.resetPassword)
 // routes.use(auth)
@@ -37,12 +37,12 @@ routes.route('/products/product/:id').delete(auth, adminController.deleteProduct
 
 
 // change buffer to photo
-routes.use(adminController.Uploads.single('avatar'))
+// routes.use(Uploads.single('avatar'))
 //users
-routes.route('/users/update/:id').patch(auth, adminController.updateUser)
+routes.route('/users/update/:id').patch(auth, Uploads.single('avatar'), adminController.updateUser)
 //products
-routes.route('/products/add').post(auth, adminController.addProduct)
-routes.route('/products/product/:id').patch(auth, adminController.updateProduct)
+routes.route('/products/add').post(auth, Uploads.array('avatar', 8), adminController.addProduct)
+routes.route('/products/product/:id').patch(auth, Uploads.array('avatar', 8), adminController.updateProduct)
 
 
 module.exports = routes
