@@ -31,7 +31,8 @@ routes.route('/products/all').get(auth, adminController.getAllProducts)
 routes.route('/products/id/:id').get(auth, adminController.getProductById)
 routes.route('/products/category/:cat').get(auth, adminController.getProductsByCategory)
 routes.route('/products/name/:name').get(auth, adminController.getProductsByName)
-routes.route('/products/product/seller/:id').get(auth, adminController.getSellerOfProduct)
+routes.route('/products/seller/:id').get(auth, adminController.getProductsBySellerID)
+routes.route('/products/product/get-seller/:id').get(auth, adminController.getSellerOfProduct)
 routes.route('/products/product/:id').delete(auth, adminController.deleteProduct)
 
 

@@ -125,19 +125,23 @@ https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/category
 19- get product by id (id in url)
 https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/id/:id (get)
 
-20- get product by SellerId (SellerId in url)
-https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/product/seller/:id (get)
+20- get products by SellerId (SellerId in url)  (can use pagination in url as query)
+https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/seller/:id (get)
 
-21- get all categories
+
+21- get seller by productId (product in url)
+https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/product/get-seller/:id (get)
+
+22- get all categories
 https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/categories/all (get)
 
-22- add product (data in body)
+23- add product (data in body)
 https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/add (post)
 
-23- update product (id in url) (data in body)
+24- update product (id in url) (data in body)
 https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/product/:id (patch)
 
-24- delete product (id in url )
+25- delete product (id in url )
 https://eazymoneyserver-production.up.railway.app/api/v1/admin/products/product/:id (delete)
 
 

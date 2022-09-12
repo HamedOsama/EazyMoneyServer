@@ -757,7 +757,30 @@ const getProductsByName = async (req, res, next) => {
     // res.status(500).send(e.message)
   }
 }
+const getProductsBySellerID = async (req, res, next) => {
+  try {
+    const sellerId = req.params.id
+    // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } })
+    const products = await ApiFeatures.pagination(
+      Product.find({ seller: sellerId }),
+      req.query
+    )
+    const totalLength = await Product.countDocuments();
 
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: products,
+      totalLength
+    })
+
+  }
+  catch (e) {
+    next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message)
+  }
+}
 
 const updateProduct = async (req, res, next) => {
   try {
@@ -850,6 +873,7 @@ module.exports = {
   getProductById,
   getProductsByCategory,
   getProductsByName,
+  getProductsBySellerID,
   getAllCategories,
   updateProduct,
   getSellerOfProduct,
