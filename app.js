@@ -2,6 +2,7 @@ const config = require('./config');
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const path = require('path')
 
 const routes = require('./src/router/index')
 const connectDatabase = require('./src/db/db')
