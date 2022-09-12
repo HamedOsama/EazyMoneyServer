@@ -18,6 +18,9 @@ app.use(express.json())
 // security middleware
 app.use(morgan('dev'))
 
+// image middleware added
+app.use('/images', express.static(path.join(__dirname, "./src/uploads")))
+
 // homepage
 app.get('/', (req, res) => {
   res.send('hello world')
