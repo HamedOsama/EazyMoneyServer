@@ -20,7 +20,7 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 // image middleware added
-app.use('/images', express.static(path.join(__dirname, "./src/uploads")))
+app.use('/images', express.static(path.join(__dirname, "./src/uploads")));
 
 // homepage
 app.get('/', (req, res) => {
