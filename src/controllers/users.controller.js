@@ -1,3 +1,4 @@
+const config = require('../../config');
 const sendgrid = require('@sendgrid/mail')
 const multer = require('multer');
 const jwt = require('jsonwebtoken')
@@ -6,6 +7,8 @@ const { User, validatePassword } = require('../model/user');
 const auth = require('../middleware/auh');
 const { json } = require('express');
 const ServerError = require('../interface/Error');
+const { sendgridApiKey, sendgridEmail } = config
+
 const Uploads = multer({
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/))
@@ -67,7 +70,7 @@ const updateUser = async (req, res, next) => {
     updates.forEach((update) => {
       req.user[update] = req.body[update];
     });
-    if (req.file) req.user.pic = req.file.buffer;
+    if (req.file) req.user.image = req.file.filename;
     await req.user.save();
     res.status(200).json({
       ok: true,
@@ -131,40 +134,48 @@ const getAllSellers = async (req, res, next) => {
 };
 
 const resetPassword = async (req, res, next) => {
-  // router.put('/resetpassword/:token', async (req, res,next) => {
   try {
     const resetLink = req.params.token
+    const newPassword = req.body.password
+    if (!newPassword) {
+      return next(ServerError.badRequest(401, 'please send password'))
+    }
     if (resetLink) {
       jwt.verify(resetLink, 'resetPassword', async function (err, decoded) {
         if (err) {
-          return next(ServerError.badRequest(401, err.message))
-          // throw new Error(err)
-          // return res.status(401).json({ error: 'Incorrect token or it is expired' })
+          return next(ServerError.badRequest(401, 'token is not correct'))
         }
-        const user = await User.findOneAndUpdate({ resetLink }, { ...req.body, resetLink: '' }, {
-          new: true,
-          runValidators: true
-        })
+        const user = await User.findOne({ resetLink: resetLink })
         if (!user) {
-          // return res.status(401).json({ error: 'Token not valid' })
-          return next(ServerError.badRequest(401, 'token not valid'))
-          // throw new Error('Token not valid')
+          return next(ServerError.badRequest(401, 'token is not correct'))
         }
-        console.log(user)
-        // user.password = await bcryptjs.hash(user.password, 8)
-        user.save()
-        return res.status(200).json({
-          ok: true,
-          code: 200,
-          message: 'succeeded',
-          body: 'your password changed successfully',
+        await user.updateOne({ password: newPassword }, {
+          new: true,
+          runValidators: true,
+        }, async (err, data) => {
+          if (err) {
+            next(ServerError.badRequest(401, e.message))
+          }
+          else if (data) {
+            console.log(user.password)
+            console.log()
+            user.password = newPassword;
+            user.resetLink = ''
+            await user.save()
+            res.json(
+              {
+                ok: true,
+                code: 200,
+                message: 'succeeded',
+                data: 'your password is successfully changed'
+              }
+            )
+          }
         })
       })
     }
     else {
-      // res.status(401).json({ error: 'Authentication error!' })
-      return next(ServerError.badRequest(401, 'authentication error'))
-      // throw new Error('Authentication error!')
+      next(ServerError.badRequest(401, 'Authentication error!'))
     }
   } catch (e) {
     next(ServerError.badRequest(500, e.message))
@@ -185,11 +196,11 @@ const forgetPassword = async (req, res, next) => {
       }
       const token = jwt.sign({ _id: user._id }, 'resetPassword', { expiresIn: '20m' })
       // const SENDGRID_API_KEY = "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"
-      const SENDGRID_API_KEY = "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"
-      sendgrid.setApiKey(SENDGRID_API_KEY)
+      // const SENDGRID_API_KEY = "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"
+      sendgrid.setApiKey(sendgridApiKey)
       const data = {
         to: email,
-        from: 'eazymony6@gmail.com',
+        from: sendgridEmail,
         subject: 'Account reset password Link',
         html: ` <h2>Please click on given Link to reset your password</h2>  
                     <p> ${url}/api/v1/users/auth/reset-password/${token} </p> 

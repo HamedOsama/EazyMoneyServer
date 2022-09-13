@@ -45,6 +45,7 @@ const getAll = async (req, res, next) => {
   try {
     // const products = await Product.find({});
     const products = await ApiFeatures.pagination(Product.find({}), req.query)
+    // const test = await Product.updateMany({ image: [] }); // update many
     res.status(200).json({
       ok: true,
       code: 200,

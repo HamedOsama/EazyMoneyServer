@@ -307,7 +307,7 @@ const forgetPassword = async (req, res, next) => {
                     <p> ${url}/auth/reset-password/${token} </p> 
               `
       }
-      admin.updateOne({ resetpassword: token }, function (err, success) {
+      admin.updateOne({ resetLink: token }, function (err, success) {
         if (err) {
           return next(ServerError.badRequest(500, 'please try again'))
           // return res.status(400).json({ err: 'reset password link error' })
@@ -353,7 +353,7 @@ const resetPassword = async (req, res, next) => {
           return next(ServerError.badRequest(401, 'token is not correct'))
           // return res.status(401).json({ error: 'Incorrect token or it is expired' })
         }
-        const admin = await Admin.findOne({ resetpassword: resetLink })
+        const admin = await Admin.findOne({ resetLink: resetLink })
         if (!admin) {
           return next(ServerError.badRequest(401, 'token is not correct'))
           // res.status(401).send('unable to found')
@@ -393,7 +393,7 @@ const resetPassword = async (req, res, next) => {
             console.log()
             admin.password = newPassword;
             // console.log(admin.password)
-            admin.resetpassword = ''
+            admin.resetLink = ''
             await admin.save()
             // const match = await bcryptjs.compare(newPassword, admin.password);
             // console.log(match)
