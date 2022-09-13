@@ -15,6 +15,7 @@ const app = express();
 const port = config.port || 3000
 app.use(cors())
 app.use(express.json())
+console.log(__dirname)
 
 // security middleware
 app.use(morgan('dev'))
