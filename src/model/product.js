@@ -14,11 +14,16 @@ const productSchema = mongoose.Schema({
         type: String,
         // required:true
     }],
-    price: {
+    originalPrice: {
         type: Number,
         required: true,
         maxLength: [8, "Price cannot exceed 8 characters"]
     },
+    sellPrice: {
+        type: Number,
+        maxLength: [8, "Price cannot exceed 8 characters"],
+    }
+    ,
     description: {
         type: String,
         required: true,
@@ -53,7 +58,8 @@ const productSchema = mongoose.Schema({
     },
     seller: {
         type: mongoose.Types.ObjectId,
-        ref: User
+        ref: User,
+        required: true
     },
     numOfReviews: {
         type: Number,

@@ -52,14 +52,14 @@ const updateUser = async (req, res, next) => {
   try {
     // console.log(req.body.password);
     const updates = Object.keys(req.body);
-    const notAllowedUpdates = ['status', 'role', 'tokens'];
+    const notAllowedUpdates = ['status', 'role', 'tokens', 'password', 'updatedAt', '_id', 'createdAt', 'resetLink',];
     // const isValid = updates.every(el => !notAllowedUpdates.includes(el));
     const inValidUpdates = updates.filter(el => notAllowedUpdates.includes(el))
     console.log(inValidUpdates)
     // console.log(isValid);
     // console.log(updates);
     if (inValidUpdates.length > 0) {
-      next(ServerError.badRequest(400, `not allowed to update (${inValidUpdates.join(', ')})`))
+      next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
       // return res.status(400).send("Can't update");
     }
     // console.log(req.user);
@@ -81,6 +81,30 @@ const updateUser = async (req, res, next) => {
   } catch (e) {
     next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
+  }
+};
+const getUser = async (req, res, next) => {
+  try {
+    // const userId = req.params.id
+    // if (!userId)
+    //   return next(ServerError.badRequest(400, 'please send id'))
+    // const user = await User.User.findById(userId)
+    // if (!user) {
+    //   return next(ServerError.badRequest(400, 'unable to find any user match this ID'))
+    // }
+    if (!req.user) {
+      return next(ServerError.badRequest(401, "token is not valid"));
+    }
+    console.log(req.user)
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: req.user,
+    })
+  } catch (e) {
+    next(ServerError.badRequest(500, e.message))
+    // res.status.apply(500).send(e.message);
   }
 };
 const getAll = async (req, res, next) => {
@@ -270,6 +294,7 @@ const logoutAll = async (req, res, next) => {
 };
 module.exports = {
   signup,
+  getUser,
   login,
   logout,
   logoutAll,

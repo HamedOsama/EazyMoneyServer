@@ -20,6 +20,12 @@ const createProduct = async (req, res, next) => {
       return next(ServerError.badRequest(403, 'Error, Must be seller to add product'))
       // throw new Error('Error, Must be seller to add product');
     }
+    const keys = Object.keys(req.body);
+    const notAllowed = ['_id', 'rate', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
+    const inValid = keys.filter(el => notAllowed.includes(el));
+    if (inValid.length > 0) {
+      next(ServerError.badRequest(401, `not allowed to insert (${inValidUpdates.join(', ')})`))
+    }
     const product = new Product({ ...req.body, seller: req.user._id });
     if (req.file) {
       product.image = req.file.buffer;
@@ -44,8 +50,10 @@ const createProduct = async (req, res, next) => {
 const getAll = async (req, res, next) => {
   try {
     // const products = await Product.find({});
-    const products = await ApiFeatures.pagination(Product.find({}), req.query)
-    // const test = await Product.updateMany({ image: [] }); // update many
+    const products = await ApiFeatures.pagination(Product.find({
+      status: 1
+    }), req.query)
+    // const test = await Product.updateMany({}, { image: [] }); // update many
     res.status(200).json({
       ok: true,
       code: 200,
@@ -150,9 +158,15 @@ const getProductsBySellerID = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
-    if (req.body.seller)
-      return next(ServerError.badRequest(400, 'sellerId cannot update!'))
+    // if (req.user.id  !== product)
+    // return next(ServerError.badRequest(400, 'sellerId cannot update!'))
     // throw new Error('sellerId cannot update!');
+    const keys = Object.keys(req.body);
+    const notAllowed = ['_id', 'rate', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
+    const inValid = keys.filter(el => notAllowed.includes(el));
+    if (inValid.length > 0) {
+      next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
+    }
     const product = await Product.findOneAndUpdate(
       { _id: productId, seller: req.user._id },
       req.body,
