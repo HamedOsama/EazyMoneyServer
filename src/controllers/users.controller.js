@@ -72,9 +72,9 @@ const updateUser = async (req, res, next) => {
     // const validation = await validatePassword(req.user, req.body.oldpassword);
     // console.log(validation);
     // if (!validation) throw new Error('wrong password');
-    // updates.forEach((update) => {
-    //   req.user[update] = req.body[update];
-    // });
+    updates.forEach((update) => {
+      req.user[update] = req.body[update];
+    });
     console.log(req.body)
     if (req.file) req.user.image = req.file.filename;
     await req.user.save();
