@@ -35,7 +35,9 @@ const addAdmin = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(400, e.message))
+    e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(400, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -67,7 +69,9 @@ const login = async (req, res, next) => {
       })
   }
   catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401
+    next(e)
+    // next(ServerError.badRequest(401, e.message))
   }
 }
 const verifyLoginCode = async (req, res, next) => {
@@ -204,7 +208,9 @@ const verifyLoginCode = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401
+    next(e)
+    // next(ServerError.badRequest(401, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -275,7 +281,9 @@ const getAdminData = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message));
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message));
   }
 }
 
@@ -334,7 +342,9 @@ const forgetPassword = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
 
     // res.status(400).send(e.message)
   }
@@ -416,7 +426,9 @@ const resetPassword = async (req, res, next) => {
     }
   }
   catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401
+    next(e)
+    // next(ServerError.badRequest(401, e.message))
     // res.status(400).send(e.message)
   }
 }
@@ -434,7 +446,9 @@ const logout = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401
+    next(e)
+    // next(ServerError.badRequest(401, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -450,7 +464,9 @@ const logoutAllDevices = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401
+    next(e)
+    // next(ServerError.badRequest(401, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -469,7 +485,9 @@ const addUser = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(400, e.message))
+    e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(400, e.message))
     // res.status(400).send(e.message)
   }
 }
@@ -496,7 +514,9 @@ const updateUser = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -517,7 +537,9 @@ const getAllUsers = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -540,7 +562,9 @@ const getAllBuyers = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -563,7 +587,9 @@ const getAllSellers = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -583,7 +609,9 @@ const logoutUserFromAllDevices = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401
+    next(e)
+    // next(ServerError.badRequest(401, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -609,7 +637,9 @@ const getUser = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(400).send(e.message)
   }
 }
@@ -640,7 +670,9 @@ const addProduct = async (req, res, next) => {
 
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -662,7 +694,9 @@ const getAllCategories = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -689,7 +723,9 @@ const getAllProducts = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -710,7 +746,9 @@ const getProductById = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -734,7 +772,9 @@ const getProductsByCategory = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -759,7 +799,9 @@ const getProductsByName = async (req, res, next) => {
 
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -783,7 +825,9 @@ const getProductsBySellerID = async (req, res, next) => {
 
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -821,7 +865,9 @@ const updateProduct = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -843,7 +889,9 @@ const getSellerOfProduct = async (req, res, next) => {
 
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -859,7 +907,9 @@ const deleteProduct = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 500
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }

@@ -125,17 +125,16 @@ userSchema.methods.generateToken = async function () {
     await user.save()
     return token
 }
+userSchema.methods.validatePassword = async function (password) {
+    const user = this
+    const isMatch = await bcryptjs.compare(password, this.password)
+    return isMatch;
+}
 userSchema.methods.toJSON = function () {
     const user = this
     const userObj = user.toObject()
     return userObj
 
 }
-const validatePassword = async (user, password) => {
-    const isMatch = await bcryptjs.compare(password, user.password)
-    // if (!isMatch)
-    // return false
-    return isMatch;
-}
 const User = mongoose.model('users', userSchema)
-module.exports = { User, validatePassword };
+module.exports = { User };

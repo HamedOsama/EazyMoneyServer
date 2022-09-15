@@ -21,7 +21,7 @@ const createProduct = async (req, res, next) => {
       // throw new Error('Error, Must be seller to add product');
     }
     const keys = Object.keys(req.body);
-    const notAllowed = ['_id', 'rate', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
+    const notAllowed = ['_id', 'rate', 'sellPrice', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
     const inValid = keys.filter(el => notAllowed.includes(el));
     if (inValid.length > 0) {
       next(ServerError.badRequest(401, `not allowed to insert (${inValidUpdates.join(', ')})`))
@@ -42,7 +42,8 @@ const createProduct = async (req, res, next) => {
       body: product,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -61,7 +62,8 @@ const getAll = async (req, res, next) => {
       body: products,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status.status(500).send(e.message);
   }
 };
@@ -79,7 +81,8 @@ const getAllCat = async (req, res, next) => {
       body: categories,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -94,7 +97,8 @@ const getProductById = async (req, res, next) => {
       body: product,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -111,7 +115,8 @@ const getProductsByCategory = async (req, res, next) => {
       body: products,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -132,7 +137,8 @@ const getProductsByName = async (req, res, next) => {
       body: products,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -151,7 +157,8 @@ const getProductsBySellerID = async (req, res, next) => {
       body: products,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -162,7 +169,7 @@ const updateProduct = async (req, res, next) => {
     // return next(ServerError.badRequest(400, 'sellerId cannot update!'))
     // throw new Error('sellerId cannot update!');
     const keys = Object.keys(req.body);
-    const notAllowed = ['_id', 'rate', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
+    const notAllowed = ['_id', 'rate', 'sellPrice', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
     const inValid = keys.filter(el => notAllowed.includes(el));
     if (inValid.length > 0) {
       next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
@@ -191,7 +198,8 @@ const updateProduct = async (req, res, next) => {
       body: product,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -212,7 +220,8 @@ const deleteProduct = async (req, res, next) => {
       message: 'succeeded',
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -226,7 +235,8 @@ const sellerGetOwn = async (req, res, next) => {
       data: req.user.products,
     });
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };

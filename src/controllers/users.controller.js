@@ -3,7 +3,7 @@ const sendgrid = require('@sendgrid/mail')
 const multer = require('multer');
 const jwt = require('jsonwebtoken')
 const bcryptjs = require('bcryptjs')
-const { User, validatePassword } = require('../model/user');
+const { User } = require('../model/user');
 const auth = require('../middleware/auh');
 const { json } = require('express');
 const ServerError = require('../interface/Error');
@@ -29,7 +29,10 @@ const signup = async (req, res, next) => {
       token
     });
   } catch (e) {
-    next(ServerError.badRequest(400, e.message))
+    // console.log(e)
+    // next(new ServerError(400, e.message))
+    e.statusCode = 400
+    next(e)
   }
 };
 const login = async (req, res, next) => {
@@ -44,7 +47,9 @@ const login = async (req, res, next) => {
       token,
     });
   } catch (e) {
-    next(ServerError.badRequest(401, e.message))
+    e.statusCode = 401;
+    next(e);
+    // next(ServerError.badRequest(401, e.message))
     // res.status(401).send(e.message);
   }
 };
@@ -79,7 +84,9 @@ const updateUser = async (req, res, next) => {
       body: req.user,
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -103,10 +110,40 @@ const getUser = async (req, res, next) => {
       body: req.user,
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status.apply(500).send(e.message);
   }
 };
+const changePassword = async (req, res, next) => {
+  try {
+    if (!req.user)
+      return next(ServerError.badRequest(400, "token is not valid"));
+    const user = req.user;
+    const password = req.body.password;
+    const newPassword = req.body.newPassword;
+    const isMatched = user.validatePassword(password);
+    if (!isMatched)
+      return next(ServerError.badRequest(400, "wrong password"));
+    user.password = newPassword;
+    await user.save()
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'password has been updated successfully',
+    })
+  } catch (e) {
+    // next(ServerError.badRequest(500, e.message))
+    next(e)
+    // res.status.apply(500).send(e.message);
+  }
+};
+
+
+
+
+
 const getAll = async (req, res, next) => {
   try {
     const users = await User.find({});
@@ -117,7 +154,8 @@ const getAll = async (req, res, next) => {
       body: users,
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // next(ServerError.badRequest(500, e.message))
+    next(e)
     // res.status.apply(500).send(e.message);
   }
 };
@@ -134,7 +172,9 @@ const getAllBuyers = async (req, res, next) => {
       body: buyers,
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -152,8 +192,10 @@ const getAllSellers = async (req, res, next) => {
       body: sellers,
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
-    res.status(500).send(e.message);
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
+    // res.status(500).send(e.message);
   }
 };
 
@@ -202,7 +244,9 @@ const resetPassword = async (req, res, next) => {
       next(ServerError.badRequest(401, 'Authentication error!'))
     }
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -254,7 +298,9 @@ const forgetPassword = async (req, res, next) => {
     })
   }
   catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message)
   }
 }
@@ -272,7 +318,9 @@ const logout = async (req, res, next) => {
       message: 'succeeded',
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
   }
 };
@@ -287,7 +335,9 @@ const logoutAll = async (req, res, next) => {
       message: 'succeeded',
     })
   } catch (e) {
-    next(ServerError.badRequest(500, e.message))
+    // e.statusCode = 400
+    next(e)
+    // next(ServerError.badRequest(500, e.message))
     // console.log(e);
     // res.status(500).send(e);
   }
@@ -298,6 +348,7 @@ module.exports = {
   login,
   logout,
   logoutAll,
+  changePassword,
   getAll,
   getAllBuyers,
   getAllSellers,
