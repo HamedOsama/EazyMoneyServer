@@ -28,7 +28,7 @@ const createProduct = async (req, res, next) => {
     }
     const product = new Product({ ...req.body, seller: req.user._id });
     if (req.file) {
-      product.image = req.file.buffer;
+      product.image = req.file.filename;
     }
     const sum = product.properties.reduce((accumulator, object) => {
       return accumulator + object.amount;
@@ -190,6 +190,9 @@ const updateProduct = async (req, res, next) => {
       return acc + el.amount
     }, 0)
     product.total_amount = sum;
+    if (req.file) {
+      product.image = req.file.filename;
+    }
     await product.save();
     res.status(200).json({
       ok: true,

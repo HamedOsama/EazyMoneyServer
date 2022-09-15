@@ -3,6 +3,8 @@ const routes = express.Router()
 const productsController = require('../../../controllers/products.controller')
 // const usersController = require('../../../controllers/users.controller')
 const auth = require('../../../middleware/auh')
+const Uploads = require('../../../utils/uploadPhoto')
+
 
 // routes do not need for authentication
 routes.route('/get-all').get(productsController.getAll)
@@ -17,7 +19,7 @@ routes.route('/seller/:seller').get(productsController.getProductsBySellerID)
 routes.route('/get-own-products').get(auth, productsController.sellerGetOwn)
 routes.route('/:id')
   .delete(auth, productsController.deleteProduct)
-  .patch(auth, productsController.updateProduct)
+  .patch(Uploads.single('avatar'), auth, productsController.updateProduct)
 // routes.route('/get').get(productsController.sellerGetOwn)
-routes.use(productsController.Uploads.single('avatar')).route('/create').post(auth, productsController.createProduct)
+routes.use(Uploads.single('avatar')).route('/create').post(auth, productsController.createProduct)
 module.exports = routes

@@ -127,7 +127,7 @@ userSchema.methods.generateToken = async function () {
 }
 userSchema.methods.validatePassword = async function (password) {
     const user = this
-    const isMatch = await bcryptjs.compare(password, this.password)
+    const isMatch = await bcryptjs.compare(password, user.password)
     return isMatch;
 }
 userSchema.methods.toJSON = function () {
