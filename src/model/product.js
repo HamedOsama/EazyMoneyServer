@@ -82,6 +82,144 @@ const productSchema = mongoose.Schema({
             type: String,
         }
     }],
+    shipping_price: {
+        cairo: {
+            type: Number,
+            default: 35,
+            required: true,
+        },
+        giza: {
+            type: Number,
+            default: 35,
+            required: true,
+        },
+        alexandria: {
+            type: Number,
+            default: 35,
+            required: true,
+        },
+        "ain sokhna": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "al Fayoum": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "al gharbia": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "al sharqia": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        aswan: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        asyut: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "bani sweif": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        dakahlia: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        damietta: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "el beheira": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "el menya": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "red sea": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        ismailia: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "kafr el sheikh": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "new valley": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "north sinai": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        matruh: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        luxor: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "el menofia": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "port said": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        qena: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        sohag: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        "south of sinai": {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+        suez: {
+            type: Number,
+            default: 50,
+            required: true,
+        },
+    }
+
     // createdAt: {
     //     type: Date,
     //     default: Date.now

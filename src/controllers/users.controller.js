@@ -60,7 +60,7 @@ const updateUser = async (req, res, next) => {
     const notAllowedUpdates = ['status', 'role', 'tokens', 'password', 'updatedAt', '_id', 'createdAt', 'resetLink',];
     // const isValid = updates.every(el => !notAllowedUpdates.includes(el));
     const inValidUpdates = updates.filter(el => notAllowedUpdates.includes(el))
-    console.log(inValidUpdates)
+    // console.log(inValidUpdates)
     // console.log(isValid);
     // console.log(updates);
     if (inValidUpdates.length > 0) {
@@ -72,17 +72,21 @@ const updateUser = async (req, res, next) => {
     // const validation = await validatePassword(req.user, req.body.oldpassword);
     // console.log(validation);
     // if (!validation) throw new Error('wrong password');
-    updates.forEach((update) => {
-      req.user[update] = req.body[update];
-    });
-    console.log(req.body)
-    if (req.file) req.user.image = req.file.filename;
-    await req.user.save();
+    // updates.forEach((update) => {
+    //   req.user[update] = req.body[update];
+    // });
+    const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+      new: true,
+      runValidators: true,
+    })
+    // console.log(req.body)
+    if (req.file) user.image = req.file.filename;
+    await user.save();
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      body: req.user,
+      body: user,
     })
   } catch (e) {
     // e.statusCode = 400
@@ -124,7 +128,9 @@ const changePassword = async (req, res, next) => {
     const user = req.user;
     const password = req.body.password;
     const newPassword = req.body.newPassword;
-    const isMatched = user.validatePassword(password);
+    if (password === newPassword)
+      return next(ServerError.badRequest(400, "old and new password are same"));
+    const isMatched = await user.validatePassword(password);
     if (!isMatched)
       return next(ServerError.badRequest(400, "wrong password"));
     user.password = newPassword;
