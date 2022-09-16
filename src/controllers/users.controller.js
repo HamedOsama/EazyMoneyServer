@@ -107,7 +107,7 @@ const getUser = async (req, res, next) => {
     if (!req.user) {
       return next(ServerError.badRequest(401, "token is not valid"));
     }
-    console.log(req.user)
+    // console.log(req.user)
     res.status(200).json({
       ok: true,
       code: 200,
