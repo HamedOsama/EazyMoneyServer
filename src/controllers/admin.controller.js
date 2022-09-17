@@ -1,6 +1,6 @@
 const config = require('../../config');
 const Admin = require('../model/admin')
-const User = require('../model/user')
+const { User } = require('../model/user')
 const Product = require('../model/product')
 const multer = require('multer')
 const ServerError = require('../interface/Error')
@@ -150,10 +150,10 @@ const verifyLoginCode = async (req, res, next) => {
     // const result = fillMissing(productChart)
 
 
-    const users = (await User.User.countDocuments());
-    // const sellers = (await User.User.count({ role: 'seller' }));
-    const sellers = (await User.User.countDocuments({ role: 'seller' }));
-    const buyers = (await User.User.countDocuments({ role: 'buyer' }));
+    const users = (await User.countDocuments());
+    // const sellers = (await User.count({ role: 'seller' }));
+    const sellers = (await User.countDocuments({ role: 'seller' }));
+    const buyers = (await User.countDocuments({ role: 'buyer' }));
     const products = await Product.count({});
     const year = new Date().getFullYear()
     const productsChart = new Array(12).fill(0);
@@ -161,7 +161,7 @@ const verifyLoginCode = async (req, res, next) => {
     const createdBuyersChart = new Array(12).fill(0);
     const blockedSellersChart = new Array(12).fill(0);
     const blockedBuyersChart = new Array(12).fill(0);
-    const usersThisUser = (await User.User.find({
+    const usersThisUser = (await User.find({
       createdAt: {
         $gte: new Date(`${year}-1`),
         $lte: new Date(`${year}-12`)
@@ -230,10 +230,10 @@ const getAdminData = async (req, res, next) => {
     // if (req.admin.id !== admin.id) {
     // return next(ServerError.badRequest(403, "Not Authorized"));
     // }
-    const users = (await User.User.countDocuments());
-    // const sellers = (await User.User.count({ role: 'seller' }));
-    const sellers = (await User.User.countDocuments({ role: 'seller' }));
-    const buyers = (await User.User.countDocuments({ role: 'buyer' }));
+    const users = (await User.countDocuments());
+    // const sellers = (await User.count({ role: 'seller' }));
+    const sellers = (await User.countDocuments({ role: 'seller' }));
+    const buyers = (await User.countDocuments({ role: 'buyer' }));
     const products = await Product.count({});
     const year = new Date().getFullYear()
     const productsChart = new Array(12).fill(0);
@@ -241,7 +241,7 @@ const getAdminData = async (req, res, next) => {
     const createdBuyersChart = new Array(12).fill(0);
     const blockedSellersChart = new Array(12).fill(0);
     const blockedBuyersChart = new Array(12).fill(0);
-    const usersThisUser = (await User.User.find({
+    const usersThisUser = (await User.find({
       createdAt: {
         $gte: new Date(`${year}-1`),
         $lte: new Date(`${year}-12`)
@@ -494,7 +494,7 @@ const addUser = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const userID = req.params.id
-    const user = await User.User.findById(userID)
+    const user = await User.findById(userID)
     if (!user)
       return next(ServerError.badRequest(400, 'user not found'))
     // res.status(404).send('unable to found')
@@ -524,10 +524,10 @@ const updateUser = async (req, res, next) => {
 const getAllUsers = async (req, res, next) => {
   try {
     const users = await ApiFeatures.pagination(
-      User.User.find({}),
+      User.find({}),
       req.query
     )
-    const totalLength = await User.User.find({});
+    const totalLength = await User.find({});
     res.status(200).json({
       ok: true,
       code: 200,
@@ -549,10 +549,10 @@ const getAllBuyers = async (req, res, next) => {
     // const user = await User.find({})
     // const buyers = user.filter(el => { return el.role == 'buyer' })
     const buyers = await ApiFeatures.pagination(
-      User.User.find({ role: 'buyer' }),
+      User.find({ role: 'buyer' }),
       req.query
     )
-    const totalLength = await User.User.find({ role: 'buyer' });
+    const totalLength = await User.find({ role: 'buyer' });
     res.status(200).json({
       ok: true,
       code: 200,
@@ -574,10 +574,10 @@ const getAllSellers = async (req, res, next) => {
     // const user = await User.find({})
     // const sellers = user.filter(el => { return el.role == 'seller' })
     const sellers = await ApiFeatures.pagination(
-      User.User.find({ role: 'seller' }),
+      User.find({ role: 'seller' }),
       req.query
     )
-    const totalLength = await User.User.find({ role: 'seller' });
+    const totalLength = await User.find({ role: 'seller' });
     res.status(200).json({
       ok: true,
       code: 200,
@@ -623,7 +623,7 @@ const getUser = async (req, res, next) => {
     const userId = req.params.id
     if (!userId)
       return next(ServerError.badRequest(400, 'please send id'))
-    const user = await User.User.findById(userId)
+    const user = await User.findById(userId)
     if (!user) {
       return next(ServerError.badRequest(400, 'unable to find any user match this ID'))
       // res.status(404).send("unable to found any user match this ID")

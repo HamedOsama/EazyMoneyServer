@@ -7,6 +7,7 @@ const { User } = require('../model/user');
 const auth = require('../middleware/auh');
 const { json } = require('express');
 const ServerError = require('../interface/Error');
+const e = require('express');
 const { sendgridApiKey, sendgridEmail } = config
 
 const Uploads = multer({
@@ -57,14 +58,14 @@ const updateUser = async (req, res, next) => {
   try {
     // console.log(req.body.password);
     const updates = Object.keys(req.body);
-    const notAllowedUpdates = ['status', 'role', 'tokens', 'password', 'updatedAt', '_id', 'createdAt', 'resetLink',];
+    const notAllowedUpdates = ['status', 'role', 'tokens', 'balance', 'password', 'updatedAt', '_id', 'createdAt', 'resetLink',];
     // const isValid = updates.every(el => !notAllowedUpdates.includes(el));
     const inValidUpdates = updates.filter(el => notAllowedUpdates.includes(el))
     // console.log(inValidUpdates)
     // console.log(isValid);
     // console.log(updates);
     if (inValidUpdates.length > 0) {
-      next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
+      return next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
       // return res.status(400).send("Can't update");
     }
     // console.log(req.user);
@@ -107,12 +108,40 @@ const getUser = async (req, res, next) => {
     if (!req.user) {
       return next(ServerError.badRequest(401, "token is not valid"));
     }
+    await req.user.populate('orders', { buyerCommission: 1, createdAt: 1, orderState: 1 })
+    // console.log(userOrders)
+    const withdrawnProfit = [];
+    const balanceUnderReview = [];
+    req.user.orders.forEach(el => {
+      if (el.orderState === 0 || el.orderState === 1 || el.orderState === 2 || el.orderState === 3)
+        balanceUnderReview.push({
+          buyerCommission: el.buyerCommission,
+          orderCreationDate: el.createdAt,
+          orderId: el._id,
+        })
+      if (el.orderState === 4)
+        withdrawnProfit.push({
+          buyerCommission: el.buyerCommission,
+          orderCreationDate: el.createdAt,
+          orderId: el._id,
+        })
+    })
+    // return res.status(200).send(req.user.orders)
     // console.log(req.user)
+    // console.log(_doc);
+    const { _doc } = req.user
+
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      body: req.user,
+      body: {
+        // req.user
+        // ...req.user.lean(),
+        ..._doc,
+        withdrawnProfit,
+        balanceUnderReview
+      }
     })
   } catch (e) {
     // e.statusCode = 400
@@ -227,7 +256,7 @@ const resetPassword = async (req, res, next) => {
           runValidators: true,
         }, async (err, data) => {
           if (err) {
-            next(ServerError.badRequest(401, e.message))
+            return next(ServerError.badRequest(401, e.message))
           }
           else if (data) {
             console.log(user.password)
@@ -248,7 +277,7 @@ const resetPassword = async (req, res, next) => {
       })
     }
     else {
-      next(ServerError.badRequest(401, 'Authentication error!'))
+      return next(ServerError.badRequest(401, 'Authentication error!'))
     }
   } catch (e) {
     // e.statusCode = 400

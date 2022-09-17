@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const timestamps = require('mongoose-timestamp')
 const validator = require('validator')
-const User = require('./user')
+const { User } = require('./user')
 const Product = require('./product')
 const orderSchema = mongoose.Schema({
     sellerId: {
@@ -14,30 +14,33 @@ const orderSchema = mongoose.Schema({
         ref: User,
         required: true
     },
-    orderInfo: {
-        sellPrice: {
-            type: Number,
-            required: true
-        },
-        newPrice: {
-            type: Number,
-            required: true
-        },
-        productId: {
-            type: mongoose.Types.ObjectId,
-            ref: Product,
-            required: true
-        },
-        propertyId: {
-            type: mongoose.Types.ObjectId,
-            ref: Product,
-            required: true
-        },
-        quantity: {
-            type: Number,
-            required: true
-        }
+    sellPrice: {
+        type: Number,
+        required: true
     },
+    newPrice: {
+        type: Number,
+        required: true
+    },
+    productId: {
+        type: mongoose.Types.ObjectId,
+        ref: Product,
+        required: true
+    },
+    orderItems: [
+        {
+            propertyId: {
+                type: mongoose.Types.ObjectId,
+                ref: Product,
+                required: true
+            },
+            quantity: {
+                type: Number,
+                required: true
+            }
+        }
+    ]
+    ,
     name: {
         type: String,
         trim: true,
@@ -98,7 +101,8 @@ const orderSchema = mongoose.Schema({
     },
     totalPrice: {
         type: Number,
-        default: 0
+        default: 0,
+        required: true
     },
     websiteTax: {
         type: Number,
@@ -117,6 +121,6 @@ const orderSchema = mongoose.Schema({
         type: Date
     }
 })
-productSchema.plugin(timestamps)
+orderSchema.plugin(timestamps)
 const Order = mongoose.model('orders', orderSchema)
 module.exports = Order

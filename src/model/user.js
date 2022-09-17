@@ -87,6 +87,18 @@ const userSchema = mongoose.Schema({
         type: String,
         default: ''
     },
+    // balanceUnderReview: {
+    //     type: Number,
+    //     default: 0
+    // },
+    balance: {
+        type: Number,
+        default: 0
+    },
+    // withdrawnProfit: {
+    //     type: Number,
+    //     default: 0
+    // },
     tokens: [{
         type: String,
         required: true
@@ -101,7 +113,11 @@ userSchema.virtual('products', {
     ref: 'products',
     localField: '_id',
     foreignField: 'seller'
-
+})
+userSchema.virtual('orders', {
+    ref: 'orders',
+    localField: '_id',
+    foreignField: 'buyerId'
 })
 userSchema.pre('save', async function () {
     const user = this
@@ -133,6 +149,8 @@ userSchema.methods.validatePassword = async function (password) {
 userSchema.methods.toJSON = function () {
     const user = this
     const userObj = user.toObject()
+    delete userObj.password;
+    // delete userObj.tokens;
     return userObj
 
 }

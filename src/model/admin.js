@@ -6,7 +6,8 @@ const bcryptjs = require('bcryptjs')
 const adminSchema = mongoose.Schema({
     username: {
         type: String,
-        trim: true
+        trim: true,
+        default: '',
     },
     email: {
         type: String,
@@ -35,7 +36,8 @@ const adminSchema = mongoose.Schema({
         validate(value) {
             if (!validator.isMobilePhone(value))
                 throw new Error("Phone is invalid")
-        }
+        },
+        default: '01010101010'
     },
     image: {
         type: String,
