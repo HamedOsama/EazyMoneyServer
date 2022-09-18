@@ -39,8 +39,11 @@ const createOrder = async (req, res, next) => {
     if (checkForStock !== req.body.orderItems.length)
       return next(ServerError.badRequest(400, 'stock is low'))
 
+    const orderQuantity = req.body.orderItems.reduce((acc, cur) => cur.quantity + acc, 0)
+    console.log(orderQuantity)
     const shippingPrice = product.shipping_price[req.body.city]
-    const totalPrice = req.body.newPrice + shippingPrice;
+    const totalPrice = (req.body.newPrice * orderQuantity) + shippingPrice;
+    console.log(totalPrice)
     // console.log(totalPrice);
     // console.log(req.body.totalPrice);
     if (req.body.shippingPrice !== shippingPrice)
@@ -53,20 +56,142 @@ const createOrder = async (req, res, next) => {
       buyerId: req.user._id,
       shippingPrice,
       totalPrice,
-      websiteTax: product.sellPrice - product.originalPrice,
-      buyerCommission: req.body.newPrice - product.sellPrice
+      websiteTax: (product.sellPrice - product.originalPrice) * orderQuantity,
+      buyerCommission: (req.body.newPrice - product.sellPrice) * orderQuantity,
     })
-    // var array = Object.entries(product.shipping_price)
-    //    if(order.sellPrice!=product.sellPrice)
-    //    return res.send('sell price incorrect please enter the correct one')
-    // if (order.newPrice < order.sellPrice)
-    //   return res.send('new price unable to smaller than sell price')
-    // order. buyerCommission=order.shippingPrice+order.newPrice
     await order.save()
-    res.status(200).send(order)
+    res.status(201).json({
+      ok: true,
+      code: 201,
+      message: 'succeeded',
+      data: order
+    })
   } catch (e) {
     next(e)
   }
 }
 
-module.exports = { createOrder }
+// Todo calc totalPrice quantity * price
+const confirmOder = async (order, req, res, next) => {
+  try {
+    order.orderState = 1;
+    const product = await Product.findById({ _id: order.productId })
+    let checkStockError = false
+    order.orderItems.forEach(async item => {
+      // get property
+      const elIndex = product.properties.findIndex(el => el._id.toString() === item.propertyId.toString());
+      //check for Stock First
+      if (product.properties[elIndex].amount < item.quantity)
+        checkStockError = true
+      // decrease stock
+      product.properties[elIndex].amount -= item.quantity;
+    })
+    if (checkStockError)
+      return next(ServerError.badRequest(400, 'stock is low cancel the or try again later'))
+    console.log(product)
+    const sum = product.properties.reduce((acc, el) => {
+      return acc + el.amount
+    }, 0)
+    product.total_amount = sum;
+    await product.save();
+    await order.save();
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      order
+    })
+  } catch (e) {
+    next(e);
+  }
+}
+const cancelOrder = async (order, req, res, next) => {
+  try {
+    const product = await Product.findById({ _id: order.productId })
+    order.orderItems.forEach(async item => {
+      // get property
+      const elIndex = product.properties.findIndex(el => el._id.toString() === item.propertyId.toString());
+      // decrease stock
+      product.properties[elIndex].amount += item.quantity;
+    })
+    const sum = product.properties.reduce((acc, el) => {
+      return acc + el.amount
+    }, 0)
+    product.total_amount = sum;
+    await product.save()
+    await order.save()
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      order
+    })
+  } catch (e) {
+    next(e);
+  }
+}
+const updateOrder = async (req, res, next) => {
+  try {
+    if (req.user.status !== 'active') {
+      return next(ServerError.badRequest(403, 'not authorized'));
+    }
+    const orderId = req.params.id;
+    if (!orderId || orderId.length < 24)
+      return next(ServerError.badRequest(400, 'order id not valid'));
+    const order = await Order.findById({ _id: orderId });
+    if (!order)
+      return next(ServerError.badRequest(400, 'order id not valid'));
+
+    const orderState = req.body.orderState;
+    if (!orderState)
+      return next(ServerError.badRequest(400, 'please put orderState in body'));
+    if (![-5, -4, -3, -2, -1, 0, 1, 2, 3, 4].includes(orderState))
+      return next(ServerError.badRequest(400, 'orderState is not in valid range'));
+    if ([-3, -4].includes(orderState)) // ask for it
+      if (req.user.role !== 'buyer') {
+        return next(ServerError.badRequest(403, 'not authorized'));
+      }
+    if ([-2, -4, 2, 3].includes(orderState))
+      if (req.user.role !== 'seller') {
+        return next(ServerError.badRequest(403, 'not authorized'));
+      }
+    if ([-5, -1, 1, 0, 4].includes(orderState))
+      return next(ServerError.badRequest(403, 'not authorized'));
+
+    if (order.orderState >= orderState && orderState >= 0)
+      return next(ServerError.badRequest(400, 'you cannot downgrade orderState step except you canceling it '));
+    if (order.orderState < 0)
+      return next(ServerError.badRequest(400, 'order is already canceled you cannot change anything in it'));
+    if (orderState === 1)
+      return await confirmOder(order, req, res, next);
+    if (orderState === 2) {
+      order.orderState = orderState;
+      await order.save();
+    }
+    if (orderState === 3) {
+      order.orderState = orderState;
+      await order.save();
+    }
+    if ([-4, -3, -2].includes(orderState)) {
+      if (order.orderState === 0) {
+        order.orderState = orderState;
+        order.save();
+      } else {
+        order.orderState = orderState;
+        return await cancelOrder(order, req, res, next);
+      }
+      // order.save();
+    }
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      order
+    })
+  } catch (e) {
+    next(e);
+  }
+}
+
+
+module.exports = { createOrder, updateOrder }

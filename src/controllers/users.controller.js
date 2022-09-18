@@ -108,24 +108,49 @@ const getUser = async (req, res, next) => {
     if (!req.user) {
       return next(ServerError.badRequest(401, "token is not valid"));
     }
-    await req.user.populate('orders', { buyerCommission: 1, createdAt: 1, orderState: 1 })
+    // await req.user.populate('orders', { buyerCommission: 1, createdAt: 1, orderState: 1 })
     // console.log(userOrders)
-    const withdrawnProfit = [];
-    const balanceUnderReview = [];
-    req.user.orders.forEach(el => {
-      if (el.orderState === 0 || el.orderState === 1 || el.orderState === 2 || el.orderState === 3)
-        balanceUnderReview.push({
-          buyerCommission: el.buyerCommission,
-          orderCreationDate: el.createdAt,
-          orderId: el._id,
-        })
-      if (el.orderState === 4)
-        withdrawnProfit.push({
-          buyerCommission: el.buyerCommission,
-          orderCreationDate: el.createdAt,
-          orderId: el._id,
-        })
-    })
+    // const withdrawnProfit = [];
+    // const balanceUnderReview = [];
+    // req.user.orders.forEach(el => {
+    // if (el.orderState === 0 || el.orderState === 1 || el.orderState === 2 || el.orderState === 3)
+    // balanceUnderReview.push({
+    // buyerCommission: el.buyerCommission,
+    // orderCreationDate: el.createdAt,
+    //       orderId: el._id,
+    //     })
+    //   if (el.orderState === 4)
+    //     withdrawnProfit.push({
+    //       buyerCommission: el.buyerCommission,
+    //       orderCreationDate: el.createdAt,
+    //       orderId: el._id,
+    //     })
+    // })
+    // }
+    const user = req.user;
+    // await req.user.populate('sellerOrders')
+    // console.log(req.user.sellerOrders)
+    const sellerData = {};
+    if (user.role === 'seller') {
+      await user.populate('sellerOrders', {
+        productId: 1,
+        orderItems: 1,
+        totalPrice: 1,
+        name: 1,
+        phone: 1,
+        city: 1,
+        area: 1,
+        address: 1,
+        subAddress: 1,
+        shippingPrice: 1,
+        storeName: 1,
+        comment: 1,
+        orderState: 1,
+        createdAt: 1
+      })
+      sellerData.order = req.user.sellerOrders
+      // console.log(req.user.orders)
+    }
     // return res.status(200).send(req.user.orders)
     // console.log(req.user)
     // console.log(_doc);
@@ -139,8 +164,9 @@ const getUser = async (req, res, next) => {
         // req.user
         // ...req.user.lean(),
         ..._doc,
-        withdrawnProfit,
-        balanceUnderReview
+        ...sellerData
+        // withdrawnProfit,
+        // balanceUnderReview
       }
     })
   } catch (e) {

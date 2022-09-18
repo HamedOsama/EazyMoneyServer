@@ -119,6 +119,11 @@ userSchema.virtual('orders', {
     localField: '_id',
     foreignField: 'buyerId'
 })
+userSchema.virtual('sellerOrders', {
+    ref: 'orders',
+    localField: '_id',
+    foreignField: 'sellerId'
+})
 userSchema.pre('save', async function () {
     const user = this
     if (user.isModified('password'))

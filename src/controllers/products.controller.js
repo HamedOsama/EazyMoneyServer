@@ -172,11 +172,12 @@ const updateProduct = async (req, res, next) => {
     const notAllowed = ['_id', 'rate', 'sellPrice', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
     const inValid = keys.filter(el => notAllowed.includes(el));
     if (inValid.length > 0) {
-      next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
+      return next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
     }
     const product = await Product.findOneAndUpdate(
       { _id: productId, seller: req.user._id },
       req.body,
+
       {
         new: true,
         runValidators: true,
