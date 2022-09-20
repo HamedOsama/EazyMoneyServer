@@ -114,7 +114,7 @@ userSchema.virtual('products', {
     localField: '_id',
     foreignField: 'seller'
 })
-userSchema.virtual('orders', {
+userSchema.virtual('buyerOrders', {
     ref: 'orders',
     localField: '_id',
     foreignField: 'buyerId'

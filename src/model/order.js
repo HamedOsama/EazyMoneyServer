@@ -3,6 +3,7 @@ const timestamps = require('mongoose-timestamp')
 const validator = require('validator')
 const { User } = require('./user')
 const Product = require('./product')
+const Admin = require('./admin')
 const orderSchema = mongoose.Schema({
     sellerId: {
         type: mongoose.Types.ObjectId,
@@ -13,6 +14,10 @@ const orderSchema = mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: User,
         required: true
+    },
+    adminId: {
+        type: mongoose.Types.ObjectId,
+        ref: Admin,
     },
     sellPrice: {
         type: Number,

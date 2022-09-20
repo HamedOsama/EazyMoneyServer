@@ -40,8 +40,8 @@ routes.route('/products/product/:id').delete(auth, adminController.deleteProduct
 // order routes
 routes.route('/order/add').post(auth, adminController.createOrder);
 routes.route('/order/:id').patch(auth, adminController.updateOrder);
-routes.route('/order/:id').get(auth, adminController.getOrder);
 routes.route('/order/all').get(auth, adminController.getAllOrders);
+routes.route('/order/id/:id').get(auth, adminController.getOrder);
 
 
 // change buffer to photo

@@ -96,6 +96,81 @@ const updateUser = async (req, res, next) => {
     // res.status(500).send(e.message);
   }
 };
+const getSellerOrders = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return next(ServerError.badRequest(401, "token is not valid"));
+    }
+    if (req.user.role !== 'seller') {
+      return next(ServerError.badRequest(403, "not authorized"));
+    }
+    await req.user.populate('sellerOrders', {
+      productId: 1,
+      orderItems: 1,
+      totalPrice: 1,
+      name: 1,
+      phone: 1,
+      city: 1,
+      area: 1,
+      address: 1,
+      subAddress: 1,
+      shippingPrice: 1,
+      storeName: 1,
+      comment: 1,
+      orderState: 1,
+      createdAt: 1
+    }, { orderState: { $ne: 0 } }
+    )
+    const allOrders = req.user.sellerOrders; // all orders
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: allOrders
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+const getBuyerOrders = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return next(ServerError.badRequest(401, "token is not valid"));
+    }
+    if (req.user.role !== 'buyer') {
+      return next(ServerError.badRequest(403, "not authorized"));
+    }
+    await req.user.populate('buyerOrders', {
+      productId: 1,
+      orderItems: 1,
+      totalPrice: 1,
+      name: 1,
+      phone: 1,
+      city: 1,
+      area: 1,
+      address: 1,
+      subAddress: 1,
+      shippingPrice: 1,
+      storeName: 1,
+      comment: 1,
+      orderState: 1,
+      createdAt: 1,
+      buyerCommission: 1,
+      sellPrice: 1,
+      newPrice: 1,
+    }, { orderState: { $ne: 0 } }
+    )
+    const allOrders = req.user.buyerOrders; // all orders
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: allOrders
+    })
+  } catch (e) {
+    next(e)
+  }
+}
 const getUser = async (req, res, next) => {
   try {
     // const userId = req.params.id
@@ -147,8 +222,22 @@ const getUser = async (req, res, next) => {
         comment: 1,
         orderState: 1,
         createdAt: 1
-      })
-      sellerData.order = req.user.sellerOrders
+      }, { orderState: { $ne: 0 } }
+      )
+      sellerData.allOrders = req.user.sellerOrders; // all orders
+      sellerData.finishedOrders = req.user.sellerOrders.filter(el => el.orderState === 4); // succeeded orders
+      sellerData.OrdersReturned = req.user.sellerOrders.filter(el => el.orderState === -5); // Returned orders
+      sellerData.OrdersCancelledByCustomer = req.user.sellerOrders.filter(el => el.orderState === -4); // Cancelled orders by Customer
+      sellerData.OrdersCancelledByBuyer = req.user.sellerOrders.filter(el => el.orderState === -3); // Cancelled orders by Buyer
+      sellerData.OrdersCancelledByYou = req.user.sellerOrders.filter(el => el.orderState === -2); // Cancelled orders by you
+
+
+
+      // sellerData.OrdersCancelledByAdmin = req.user.sellerOrders.filter(el => el.orderState === -1); // Cancelled orders by admin
+
+
+
+      // .find({ orderState: { $get: 1, $lte: -1 } })
       // console.log(req.user.orders)
     }
     // return res.status(200).send(req.user.orders)
@@ -418,4 +507,6 @@ module.exports = {
   resetPassword,
   forgetPassword,
   Uploads,
+  getSellerOrders,
+  getBuyerOrders,
 };

@@ -965,10 +965,13 @@ const createOrder = async (req, res, next) => {
       return next(ServerError.badRequest(400, 'invalid shipping price'))
     if (req.body.totalPrice !== totalPrice)
       return next(ServerError.badRequest(400, 'invalid total price'))
+
+    console.log(req.admin._id)
     const order = new Order({
       ...req.body,
       sellerId: product.seller,
       buyerId: req.body.buyerId,
+      adminId: req.admin._id,
       shippingPrice,
       totalPrice,
       websiteTax: (product.sellPrice - product.originalPrice) * orderQuantity,
@@ -990,7 +993,7 @@ const createOrder = async (req, res, next) => {
 const getAllOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({});
-    req.status(200).json({
+    res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
@@ -1008,7 +1011,7 @@ const getOrder = async (req, res, next) => {
     const order = await Order.findById({ _id: orderId });
     if (!order)
       return next(ServerError.badRequest(400, 'order id not valid'));
-    req.status(200).json({
+    res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
@@ -1076,6 +1079,26 @@ const cancelOrder = async (order, req, res, next) => {
     next(e);
   }
 }
+const finishOrder = async (order, req, res, next) => {
+  try {
+    const user = await User.findById({ _id: order.buyerId });
+    const orderQuantity = order.orderItems.reduce((acc, cur) => cur.quantity + acc, 0);
+    const checkCommission = orderQuantity * (order.newPrice - order.sellPrice);
+    if (checkCommission !== order.buyerCommission)
+      return next(ServerError.badRequest(400, 'buyer commission has error in its calculation'));
+    user.balance += order.buyerCommission;
+    user.save();
+    order.save();
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      order
+    })
+  } catch (e) {
+    next(e)
+  }
+}
 const updateOrder = async (req, res, next) => {
   try {
     const orderId = req.params.id;
@@ -1090,6 +1113,9 @@ const updateOrder = async (req, res, next) => {
       return next(ServerError.badRequest(400, 'please put orderState in body'));
     if (![-5, -4, -3, -2, -1, 0, 1, 2, 3, 4].includes(orderState))
       return next(ServerError.badRequest(400, 'orderState is not in valid range'));
+    // if (order.orderState === 4 && orderState !== -5) { // return item
+    //   return next(ServerError.badRequest(400, 'order is done you can only return it'));
+    // }
     if (order.orderState >= orderState && orderState >= 0)
       return next(ServerError.badRequest(400, 'you cannot downgrade orderState step except you canceling it '));
     if (order.orderState < 0)
@@ -1103,6 +1129,11 @@ const updateOrder = async (req, res, next) => {
     if (orderState === 3) {
       order.orderState = orderState;
       await order.save();
+    }
+    if (orderState === 4) {
+      order.orderState = orderState;
+      return await finishOrder(order, req, res, next);
+
     }
     if ([-5, -4, -3, -2, -1].includes(orderState)) {
       if (order.orderState === 0) {

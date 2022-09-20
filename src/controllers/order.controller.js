@@ -145,13 +145,17 @@ const updateOrder = async (req, res, next) => {
     const orderState = req.body.orderState;
     if (!orderState)
       return next(ServerError.badRequest(400, 'please put orderState in body'));
-    if (![-5, -4, -3, -2, -1, 0, 1, 2, 3, 4].includes(orderState))
+    if (![-4, -3, -2, 2, 3].includes(orderState))
       return next(ServerError.badRequest(400, 'orderState is not in valid range'));
-    if ([-3, -4].includes(orderState)) // ask for it
+    if (orderState === -3) {
       if (req.user.role !== 'buyer') {
         return next(ServerError.badRequest(403, 'not authorized'));
       }
-    if ([-2, -4, 2, 3].includes(orderState))
+      if (order.orderState !== 0) {
+        return next(ServerError.badRequest(403, 'you can not cancel the order after it is confirmed'));
+      }
+    } // ask for it
+    if ([-4, -2, 2, 3].includes(orderState))
       if (req.user.role !== 'seller') {
         return next(ServerError.badRequest(403, 'not authorized'));
       }
