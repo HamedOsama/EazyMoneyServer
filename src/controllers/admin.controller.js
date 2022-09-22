@@ -871,9 +871,8 @@ const updateProduct = async (req, res, next) => {
     if (!product) {
       return next(ServerError.badRequest(400, 'product not found'))
     }
-    if (req.body.status === 1 && !product.sellPrice) {
-      if (!req.body.sellPrice)
-        return next(ServerError.badRequest(400, 'you must put sell price first to appear on website'))
+    if (req.body.status === 1 && (!product.sellPrice ?? !req.body.sellPrice)) {
+      return next(ServerError.badRequest(400, 'you must put sell price first to appear on website'))
     }
     if (req.body.sellPrice <= product.originalPrice) {
       return next(ServerError.badRequest(400, 'sell price must be more original price'))
