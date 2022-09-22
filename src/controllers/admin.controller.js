@@ -993,14 +993,39 @@ const createOrder = async (req, res, next) => {
 }
 
 
+const addProductToOrder = async (orders) => {
+  const newOrders = [];
+  // await orders.map(async el => {
+  for (const el of orders) {
+    const product = await Product.findById({ _id: el.productId });
+    const newOrderForm = { ...el._doc };
+    newOrderForm.OrderedProduct = product;
+    newOrderForm.OrderedProperties = el.orderItems.map(orderProperty => product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
+    newOrders.push(newOrderForm)
+  }
+  return newOrders;
+}
 const getAllOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({});
+    const orders = await ApiFeatures.pagination(
+      Order.find({}),
+      req.query
+    )
+    // const newOrders = [];
+    // await orders.map(async el => {
+    //   const product = await Product.findById({ _id: el.productId });
+    //   el.product = product;
+    //   console.log(1)
+    //   newOrders.push(135)
+    // })
+    // console.log(newOrders)
+    const newOrders = await addProductToOrder(orders);
+    // console.log(newOrders)
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: orders
+      data: newOrders
     })
   } catch (e) {
     next(e)
@@ -1155,7 +1180,6 @@ const updateOrder = async (req, res, next) => {
       ok: true,
       code: 200,
       message: 'succeeded',
-      order
     })
   } catch (e) {
     next(e);

@@ -200,4 +200,30 @@ const updateOrder = async (req, res, next) => {
 }
 
 
-module.exports = { createOrder, updateOrder }
+const getOrder = async (req, res, next) => {
+  try {
+    const orderId = req.params.id;
+    if (!orderId || orderId.length < 24)
+      return next(ServerError.badRequest(400, 'order id not valid'));
+    const order = await Order.findById({ _id: orderId });
+    if (!order)
+      return next(ServerError.badRequest(400, 'order id not valid'));
+    const product = await Product.findById({ _id: order.productId })
+    console.log(product)
+    // if (req.user.role === 'seller') {
+    //   console.log(req.user._id)
+    //   console.log(order.seller)
+    //   if (req.user._id.toString() !== order.sellerId.toString())
+    //     return next(ServerError.badRequest(403, 'not authorized'));
+    // }
+    if (req.user.role === 'buyer') {
+      if (req.user._id.toString() !== order.buyerId.toString())
+        return next(ServerError.badRequest(403, 'not authorized'));
+    }
+    res.status(200).send('done')
+  } catch (e) {
+    next(e);
+  }
+}
+
+module.exports = { createOrder, updateOrder, getOrder }
