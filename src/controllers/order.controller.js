@@ -10,7 +10,7 @@ const createOrder = async (req, res, next) => {
       return next(ServerError.badRequest(403, 'not authorized'))
     }
     if (req.body.newPrice <= req.body.sellPrice) {
-      return next(ServerError.badRequest(400, 'sellPrice not valid'))
+      return next(ServerError.badRequest(400, 'new price must be greater than sell price'))
     }
     const productId = req.body.productId
     const product = await Product.findById({ _id: productId })
