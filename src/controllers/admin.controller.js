@@ -1119,6 +1119,9 @@ const updateOrder = async (req, res, next) => {
     // if (order.orderState === 4 && orderState !== -5) { // return item
     //   return next(ServerError.badRequest(400, 'order is done you can only return it'));
     // }
+    if (order.orderState === 4) {
+      return next(ServerError.badRequest(400, 'order can not modified after it is finished'));
+    }
     if (order.orderState >= orderState && orderState >= 0)
       return next(ServerError.badRequest(400, 'you cannot downgrade orderState step except you canceling it '));
     if (order.orderState < 0)

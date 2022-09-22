@@ -141,7 +141,9 @@ const updateOrder = async (req, res, next) => {
     const order = await Order.findById({ _id: orderId });
     if (!order)
       return next(ServerError.badRequest(400, 'order id not valid'));
-
+    if (order.orderState === 4) {
+      return next(ServerError.badRequest(400, 'order can not modified after it is finished'));
+    }
     const orderState = req.body.orderState;
     if (!orderState)
       return next(ServerError.badRequest(400, 'please put orderState in body'));
