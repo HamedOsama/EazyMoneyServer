@@ -157,12 +157,20 @@ const verifyLoginCode = async (req, res, next) => {
     const buyers = (await User.countDocuments({ role: 'buyer' }));
     const products = await Product.count({});
     const year = new Date().getFullYear()
+    const orders = await Order.countDocuments();
+    const ordersThisYear = (await Order.find({
+      createdAt: {
+        $gte: new Date(`${year}-1`),
+        $lte: new Date(`${year}-12`)
+      }
+    }));
     const productsChart = new Array(12).fill(0);
+    const ordersChart = new Array(12).fill(0);
     const createdSellersChart = new Array(12).fill(0);
     const createdBuyersChart = new Array(12).fill(0);
     const blockedSellersChart = new Array(12).fill(0);
     const blockedBuyersChart = new Array(12).fill(0);
-    const usersThisUser = (await User.find({
+    const usersThisYear = (await User.find({
       createdAt: {
         $gte: new Date(`${year}-1`),
         $lte: new Date(`${year}-12`)
@@ -174,7 +182,7 @@ const verifyLoginCode = async (req, res, next) => {
         $lte: new Date(`${year}-12`)
       }
     })
-    usersThisUser.forEach(el => {
+    usersThisYear.forEach(el => {
       const index = el.createdAt.getMonth();
       el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
       if (el.status === 'not-active')
@@ -183,6 +191,10 @@ const verifyLoginCode = async (req, res, next) => {
     productThisYear.forEach(el => {
       const index = el.createdAt.getMonth();
       productsChart[index]++;
+    })
+    ordersThisYear.forEach(el => {
+      const index = el.createdAt.getMonth();
+      ordersChart[index]++;
     })
     res.status(200).json({
       ok: true,
@@ -194,6 +206,8 @@ const verifyLoginCode = async (req, res, next) => {
         sellers,
         buyers,
         products,
+        orders,
+        ordersChart,
         createdSellersChart,
         createdBuyersChart,
         blockedSellersChart,
@@ -237,12 +251,20 @@ const getAdminData = async (req, res, next) => {
     const buyers = (await User.countDocuments({ role: 'buyer' }));
     const products = await Product.count({});
     const year = new Date().getFullYear()
+    const orders = await Order.countDocuments();
+    const ordersThisYear = (await Order.find({
+      createdAt: {
+        $gte: new Date(`${year}-1`),
+        $lte: new Date(`${year}-12`)
+      }
+    }));
+    const ordersChart = new Array(12).fill(0);
     const productsChart = new Array(12).fill(0);
     const createdSellersChart = new Array(12).fill(0);
     const createdBuyersChart = new Array(12).fill(0);
     const blockedSellersChart = new Array(12).fill(0);
     const blockedBuyersChart = new Array(12).fill(0);
-    const usersThisUser = (await User.find({
+    const usersThisYear = (await User.find({
       createdAt: {
         $gte: new Date(`${year}-1`),
         $lte: new Date(`${year}-12`)
@@ -254,7 +276,7 @@ const getAdminData = async (req, res, next) => {
         $lte: new Date(`${year}-12`)
       }
     })
-    usersThisUser.forEach(el => {
+    usersThisYear.forEach(el => {
       const index = el.createdAt.getMonth();
       el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
       if (el.status === 'not-active')
@@ -263,6 +285,10 @@ const getAdminData = async (req, res, next) => {
     productThisYear.forEach(el => {
       const index = el.createdAt.getMonth();
       productsChart[index]++;
+    })
+    ordersThisYear.forEach(el => {
+      const index = el.createdAt.getMonth();
+      ordersChart[index]++;
     })
     res.status(200).json({
       ok: true,
@@ -273,6 +299,8 @@ const getAdminData = async (req, res, next) => {
       sellers,
       buyers,
       products,
+      orders,
+      ordersChart,
       productsChart,
       createdSellersChart,
       createdBuyersChart,
@@ -528,7 +556,7 @@ const getAllUsers = async (req, res, next) => {
       User.find({}),
       req.query
     )
-    const totalLength = await User.find({});
+    const totalLength = await User.countDocuments();
     res.status(200).json({
       ok: true,
       code: 200,
@@ -553,7 +581,7 @@ const getAllBuyers = async (req, res, next) => {
       User.find({ role: 'buyer' }),
       req.query
     )
-    const totalLength = await User.find({ role: 'buyer' });
+    const totalLength = await User.countDocuments({ role: 'buyer' });
     res.status(200).json({
       ok: true,
       code: 200,
@@ -578,7 +606,7 @@ const getAllSellers = async (req, res, next) => {
       User.find({ role: 'seller' }),
       req.query
     )
-    const totalLength = await User.find({ role: 'seller' });
+    const totalLength = await User.countDocuments({ role: 'seller' });
     res.status(200).json({
       ok: true,
       code: 200,
@@ -1020,12 +1048,14 @@ const getAllOrders = async (req, res, next) => {
     // })
     // console.log(newOrders)
     const newOrders = await addProductToOrder(orders);
+    const totalLength = await Order.countDocuments()
     // console.log(newOrders)
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: newOrders
+      data: newOrders,
+      totalLength
     })
   } catch (e) {
     next(e)
