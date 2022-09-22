@@ -840,6 +840,9 @@ const updateProduct = async (req, res, next) => {
       new: true,
       runValidators: true
     })
+    if (!product) {
+      return next(ServerError.badRequest(400, 'product not found'))
+    }
     const filesPaths = []
     if (req.files) {
       for (let i = 0; i < req.files.length; i++) {
@@ -847,16 +850,16 @@ const updateProduct = async (req, res, next) => {
       }
       product.image = filesPaths
     }
+    if (req.body.sellPrice <= product.originalPrice) {
+      return next(ServerError.badRequest(400, 'sell price must be more original price'))
+    }
     const sum = product.properties.reduce((accumulator, object) => {
       return accumulator + object.amount;
     }, 0);
 
     product.total_amount = sum
 
-    if (!product) {
-      return next(ServerError.badRequest(400, 'product not found'))
-      // res.status(404).send('unable to found')
-    }
+
     await product.save()
     res.status(200).json({
       ok: true,
