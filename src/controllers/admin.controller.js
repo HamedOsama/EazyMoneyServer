@@ -871,6 +871,13 @@ const updateProduct = async (req, res, next) => {
     if (!product) {
       return next(ServerError.badRequest(400, 'product not found'))
     }
+    if (req.body.status === 1 && !product.sellPrice) {
+      if (!req.body.sellPrice)
+        return next(ServerError.badRequest(400, 'you must put sell price first to appear on website'))
+    }
+    if (req.body.sellPrice <= product.originalPrice) {
+      return next(ServerError.badRequest(400, 'sell price must be more original price'))
+    }
     const filesPaths = []
     if (req.files) {
       for (let i = 0; i < req.files.length; i++) {
@@ -878,16 +885,10 @@ const updateProduct = async (req, res, next) => {
       }
       product.image = filesPaths
     }
-    if (req.body.sellPrice <= product.originalPrice) {
-      return next(ServerError.badRequest(400, 'sell price must be more original price'))
-    }
     const sum = product.properties.reduce((accumulator, object) => {
       return accumulator + object.amount;
     }, 0);
-
     product.total_amount = sum
-
-
     await product.save()
     res.status(200).json({
       ok: true,
