@@ -962,6 +962,11 @@ const createOrder = async (req, res, next) => {
     const product = await Product.findById({ _id: productId })
     if (!product)
       return next(ServerError.badRequest(400, 'invalid product id'))
+    if (product.status !== 1)
+      return next(ServerError.badRequest(400, 'can not buy this product because it is not active'))
+    if (!product.sellPrice)
+      return next(ServerError.badRequest(400, 'can not buy this product because it is not active and do not have sell price yet'))
+
     // const ordersProperties = product.properties.filter(el => el._id.toString() === req.body.orderItems[0].propertyId)
     const validateQuantity = req?.body?.orderItems?.every(el => el.quantity > 0)
     if (!validateQuantity)
@@ -1021,13 +1026,17 @@ const createOrder = async (req, res, next) => {
 }
 
 
-const addProductToOrder = async (orders) => {
+const addMoreDataToOrder = async (orders) => {
   const newOrders = [];
   // await orders.map(async el => {
   for (const el of orders) {
     const product = await Product.findById({ _id: el.productId });
+    const buyer = await User.findById({ _id: el.buyerId });
+    const seller = await User.findById({ _id: el.sellerId });
     const newOrderForm = { ...el._doc };
     newOrderForm.OrderedProduct = product;
+    newOrderForm.buyer = buyer;
+    newOrderForm.seller = seller;
     newOrderForm.OrderedProperties = el.orderItems.map(orderProperty => product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
     newOrders.push(newOrderForm)
   }
@@ -1047,7 +1056,7 @@ const getAllOrders = async (req, res, next) => {
     //   newOrders.push(135)
     // })
     // console.log(newOrders)
-    const newOrders = await addProductToOrder(orders);
+    const newOrders = await addMoreDataToOrder(orders);
     const totalLength = await Order.countDocuments()
     // console.log(newOrders)
     res.status(200).json({
