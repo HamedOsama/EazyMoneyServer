@@ -20,6 +20,8 @@ const createOrder = async (req, res, next) => {
       return next(ServerError.badRequest(400, 'can not buy this product because it is not active'))
     if (!product.sellPrice)
       return next(ServerError.badRequest(400, 'can not buy this product because it is not active and do not have sell price yet'))
+    if (req.body.sellPrice !== product.sellPrice)
+      return next(ServerError.badRequest(400, 'sellPrice is wrong'))
     // const ordersProperties = product.properties.filter(el => el._id.toString() === req.body.orderItems[0].propertyId)
     const validateQuantity = req?.body?.orderItems?.every(el => el.quantity > 0)
     if (!validateQuantity)
