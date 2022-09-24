@@ -1028,7 +1028,19 @@ const createOrder = async (req, res, next) => {
 
 const addMoreDataToOrder = async (orders) => {
   const newOrders = [];
+
   // await orders.map(async el => {
+  if (!(orders instanceof Array)) {
+    const product = await Product.findById({ _id: orders.productId });
+    const buyer = await User.findById({ _id: orders.buyerId });
+    const seller = await User.findById({ _id: orders.sellerId });
+    const newOrderForm = { ...orders._doc };
+    newOrderForm.OrderedProduct = product;
+    newOrderForm.buyer = buyer;
+    newOrderForm.seller = seller;
+    newOrderForm.OrderedProperties = orders.orderItems.map(orderProperty => product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
+    return newOrderForm;
+  }
   for (const el of orders) {
     const product = await Product.findById({ _id: el.productId });
     const buyer = await User.findById({ _id: el.buyerId });
@@ -1078,11 +1090,49 @@ const getOrder = async (req, res, next) => {
     const order = await Order.findById({ _id: orderId });
     if (!order)
       return next(ServerError.badRequest(400, 'order id not valid'));
+
+    const newOrderForm = await addMoreDataToOrder(order);
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: order
+      data: newOrderForm
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+const getOrdersBySellerId = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const orders = await ApiFeatures.pagination(
+      Order.find({ sellerId: id }),
+      req.query
+    )
+    const newOrdersForm = await addMoreDataToOrder(orders);
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: newOrdersForm
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+const getOrdersByBuyerId = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const orders = await ApiFeatures.pagination(
+      Order.find({ sellerId: id }),
+      req.query
+    )
+    const newOrdersForm = await addMoreDataToOrder(orders);
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: newOrdersForm
     })
   } catch (e) {
     next(e)
@@ -1257,5 +1307,7 @@ module.exports = {
   createOrder,
   getOrder,
   getAllOrders,
+  getOrdersBySellerId,
+  getOrdersByBuyerId,
   updateOrder
 }
