@@ -158,7 +158,7 @@ const getBuyerOrders = async (req, res, next) => {
       buyerCommission: 1,
       sellPrice: 1,
       newPrice: 1,
-    }, { orderState: { $ne: 0 } }
+    }
     )
     const allOrders = req.user.buyerOrders; // all orders
     res.status(200).json({

@@ -224,7 +224,10 @@ const getOrder = async (req, res, next) => {
       if (req.user._id.toString() !== order.buyerId.toString())
         return next(ServerError.badRequest(403, 'not authorized'));
     }
-    res.status(200).send('done')
+    const newOrderForm = { _id, buyerId } = order;
+    res.status(200).json({
+      data: newOrderForm
+    })
   } catch (e) {
     next(e);
   }
