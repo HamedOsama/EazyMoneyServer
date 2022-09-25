@@ -1113,11 +1113,13 @@ const getOrdersBySellerId = async (req, res, next) => {
       req.query
     )
     const newOrdersForm = await addMoreDataToOrder(orders);
+    const totalLength = await Order.countDocuments({ sellerId: id });
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: newOrdersForm
+      data: newOrdersForm,
+      totalLength
     })
   } catch (e) {
     next(e)
@@ -1131,11 +1133,14 @@ const getOrdersByBuyerId = async (req, res, next) => {
       req.query
     )
     const newOrdersForm = await addMoreDataToOrder(orders);
+    const totalLength = await Order.countDocuments({ buyerId: id });
+
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      data: newOrdersForm
+      data: newOrdersForm,
+      totalLength
     })
   } catch (e) {
     next(e)
@@ -1315,6 +1320,89 @@ const updateWithdrawal = async (req, res, next) => {
   }
 }
 
+const getWithdrawalById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'withdrawal id not valid'));
+    const withdrawal = await Withdrawal.findById({ _id: id });
+    if (!withdrawal)
+      return next(ServerError.badRequest(400, 'withdrawal id not valid'));
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawal
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
+
+const getWithdrawalsByBuyerId = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'buyer id not valid'));
+    const withdrawals = await ApiFeatures.pagination(
+      Withdrawal.find({ buyerId: id }),
+      req.query
+    )
+    const totalLength = await Withdrawal.countDocuments({ buyerId: id })
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawals,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
+
+const getWithdrawalsByPaymentPhone = async (req, res, next) => {
+  try {
+    const phoneNumber = req.params.phone;
+    if (!phoneNumber || phoneNumber.length < 11)
+      return next(ServerError.badRequest(400, 'phone number id not valid'));
+    const withdrawals = await ApiFeatures.pagination(
+      Withdrawal.find({ payment_method_number: phoneNumber }),
+      req.query
+    )
+    const totalLength = await Withdrawal.countDocuments({ payment_method_number: phoneNumber })
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawals,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
+const getAllWithdrawals = async (req, res, next) => {
+  try {
+    const withdrawals = await ApiFeatures.pagination(
+      Withdrawal.find({}),
+      req.query
+    )
+    const totalLength = await Withdrawal.countDocuments({})
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawals,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
 module.exports = {
   Uploads,
   addAdmin,
@@ -1348,5 +1436,9 @@ module.exports = {
   getOrdersBySellerId,
   getOrdersByBuyerId,
   updateOrder,
-  updateWithdrawal
+  updateWithdrawal,
+  getWithdrawalById,
+  getWithdrawalsByBuyerId,
+  getWithdrawalsByPaymentPhone,
+  getAllWithdrawals,
 }

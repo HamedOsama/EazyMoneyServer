@@ -55,5 +55,10 @@ routes.route('/products/add').post(auth, Uploads.array('avatar', 8), adminContro
 routes.route('/products/product/:id').patch(auth, Uploads.array('avatar', 8), adminController.updateProduct)
 
 // withdrawal
+routes.route('/withdrawal/all').get(auth, adminController.getAllWithdrawals)
+routes.route('/withdrawal/:id').get(auth, adminController.getWithdrawalById)
+routes.route('/withdrawal/buyer/:id').get(auth, adminController.getWithdrawalsByBuyerId)
+routes.route('/withdrawal/phone/:phone').get(auth, adminController.getWithdrawalsByPaymentPhone)
+
 routes.route('/withdrawal/:id').patch(auth, adminController.updateWithdrawal)
 module.exports = routes
