@@ -217,7 +217,7 @@ const deleteProduct = async (req, res, next) => {
     if (!product)
       return next(ServerError.badRequest(400, 'invalid id'))
     product.status = -2;
-    product.save()
+    await product.save()
     // throw new Error('Invalid ID')
     // await Product.save();
     res.status(200).json({

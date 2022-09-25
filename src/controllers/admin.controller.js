@@ -931,8 +931,10 @@ const getSellerOfProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
   try {
     const productId = req.params.id
-    const product = await Product.findOneAndDelete({ _id: productId })
-
+    // const product = await Product.findOneAndDelete({ _id: productId })
+    const product = await Product.findOne({ _id: productId })
+    product.status = -2;
+    await product.save();
     res.status(200).json({
       ok: true,
       code: 200,
