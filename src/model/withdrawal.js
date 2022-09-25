@@ -1,15 +1,21 @@
 const mongoose = require('mongoose')
-const User = require('./user')
+const { User } = require('./user')
 const validator = require('validator')
 const timestamps = require('mongoose-timestamp')
 const withdrawal = mongoose.Schema({
   buyerId: {
     type: mongoose.Types.ObjectId,
-    ref: User
+    ref: User,
+    required: true,
   },
   transactionId: {
     type: Number,
-    trim: true
+    trim: true,
+    default: null
+  },
+  state: {
+    type: Number,
+    default: 0
   },
   withdrawnAmount: {
     type: Number,
@@ -29,7 +35,7 @@ const withdrawal = mongoose.Schema({
     required: true,
     enum: ['vodafone cash', 'orange cash', 'we cash', 'etsalat cash']
   },
-  payment_method_num: {
+  payment_method_number: {
     type: String,
     required: true,
     trim: true,

@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken')
 const bcryptjs = require('bcryptjs');
 const ApiFeatures = require('../utils/ApiFeatures');
 const Order = require('../model/order');
+const Withdrawal = require('../model/withdrawal');
 const { sendgridApiKey, sendgridEmail } = config
 
 const Uploads = multer({
@@ -1277,7 +1278,42 @@ const updateOrder = async (req, res, next) => {
   }
 }
 
-
+const updateWithdrawal = async (req, res, next) => {
+  try {
+    const validFields = ['transactionId'];
+    let checkerForValidFields = true;
+    for (const el in req.body)
+      if (!validFields.includes(el)) {
+        return next(ServerError.badRequest(400, 'not valid fields sent'));
+        // checkerForValidFields = false;
+        // break;
+      }
+    // if (!checkerForValidFields)
+    //   return next(ServerError.badRequest(400, 'not valid fields sent'));
+    // console.log(1)
+    const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'withdrawal id not valid'));
+    const transactionId = req.body.transactionId;
+    if (!transactionId)
+      return next(ServerError.badRequest(400, 'please enter transaction Id'));
+    const withdrawal = await Withdrawal.findById({ _id: id });
+    if (!withdrawal)
+      return next(ServerError.badRequest(400, 'withdrawal id not valid'));
+    if (withdrawal.state === 1)
+      return next(ServerError.badRequest(400, 'withdrawal has already completed you can not update it'));
+    withdrawal.transactionId = transactionId;
+    withdrawal.state = 1;
+    await withdrawal.save();
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+    })
+  } catch (e) {
+    next(e);
+  }
+}
 
 module.exports = {
   Uploads,
@@ -1311,5 +1347,6 @@ module.exports = {
   getAllOrders,
   getOrdersBySellerId,
   getOrdersByBuyerId,
-  updateOrder
+  updateOrder,
+  updateWithdrawal
 }

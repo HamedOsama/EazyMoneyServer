@@ -54,5 +54,6 @@ routes.route('/users/update/:id').patch(auth, Uploads.single('avatar'), adminCon
 routes.route('/products/add').post(auth, Uploads.array('avatar', 8), adminController.addProduct)
 routes.route('/products/product/:id').patch(auth, Uploads.array('avatar', 8), adminController.updateProduct)
 
-
+// withdrawal
+routes.route('/withdrawal/:id').patch(auth, adminController.updateWithdrawal)
 module.exports = routes
