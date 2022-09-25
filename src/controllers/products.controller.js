@@ -210,12 +210,14 @@ const updateProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
-    const product = await Product.findOneAndDelete({
+    const product = await Product.findOne({
       _id: productId,
       seller: req.user._id,
     });
     if (!product)
       return next(ServerError.badRequest(400, 'invalid id'))
+    product.status = -2;
+    product.save()
     // throw new Error('Invalid ID')
     // await Product.save();
     res.status(200).json({

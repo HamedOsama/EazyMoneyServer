@@ -7,7 +7,9 @@ const { User } = require('../model/user');
 const auth = require('../middleware/auh');
 const { json } = require('express');
 const ServerError = require('../interface/Error');
-const e = require('express');
+// const e = require('express');
+const ApiFeatures = require('../utils/ApiFeatures');
+const Withdrawal = require('../model/withdrawal');
 const { sendgridApiKey, sendgridEmail } = config
 
 const Uploads = multer({
@@ -493,6 +495,32 @@ const logoutAll = async (req, res, next) => {
     // res.status(500).send(e);
   }
 };
+
+
+const getBuyerWithdrawals = async (req, res, next) => {
+  try {
+    const user = req.user
+    if (user.role !== 'buyer')
+      return next(ServerError.badRequest(403, 'not authorized'));
+    // user.populate('buyerWithdrawals');
+
+    const withdrawals = await ApiFeatures.pagination(
+      Withdrawal.find({ buyerId: req.user._id }), req.query
+    )
+    const totalLength = await Withdrawal.countDocuments({ buyerId: req.user._id });
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawals,
+      totalLength,
+    })
+    // req.query
+    // )
+  } catch (e) {
+    next(e)
+  }
+}
 module.exports = {
   signup,
   getUser,
@@ -509,4 +537,5 @@ module.exports = {
   Uploads,
   getSellerOrders,
   getBuyerOrders,
+  getBuyerWithdrawals,
 };

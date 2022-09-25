@@ -124,6 +124,11 @@ userSchema.virtual('sellerOrders', {
     localField: '_id',
     foreignField: 'sellerId'
 })
+// userSchema.virtual('buyerWithdrawals', {
+//     ref: 'withdrawals',
+//     localField: '_id',
+//     foreignField: 'buyerId'
+// })
 userSchema.pre('save', async function () {
     const user = this
     if (user.isModified('password'))

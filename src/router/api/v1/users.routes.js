@@ -15,8 +15,13 @@ routes.route('/forget-password').put(usersController.forgetPassword)
 // routes.delete('/logout', auth, usersController.logout)
 // routes.use(auth)
 routes.route('/get-user').get(auth, usersController.getUser)
+//order
 routes.route('/order/seller').get(auth, usersController.getSellerOrders)
 routes.route('/order/buyer').get(auth, usersController.getBuyerOrders)
+
+//withdrawal
+routes.route('/withdrawal/buyer').get(auth, usersController.getBuyerWithdrawals);
+
 routes.route('/change-password').put(auth, usersController.changePassword)
 routes.route('/logout').delete(auth, usersController.logout)
 routes.route('/logout-all-devices').delete(auth, usersController.logoutAll)
