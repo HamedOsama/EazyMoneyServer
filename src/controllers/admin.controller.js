@@ -1221,6 +1221,8 @@ const getOrder = async (req, res, next) => {
 const getOrdersBySellerId = async (req, res, next) => {
   try {
     const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
       Order.find({ sellerId: id }),
       req.query
@@ -1241,13 +1243,14 @@ const getOrdersBySellerId = async (req, res, next) => {
 const getOrdersByBuyerId = async (req, res, next) => {
   try {
     const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ sellerId: id }),
+      Order.find({ buyerId: id }),
       req.query
     )
     const newOrdersForm = await addMoreDataToOrder(orders);
     const totalLength = await Order.countDocuments({ buyerId: id });
-
     res.status(200).json({
       ok: true,
       code: 200,
