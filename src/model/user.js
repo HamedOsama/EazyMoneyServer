@@ -142,8 +142,8 @@ userSchema.statics.Login = async function (mail, pass) {
     const isMatch = await bcryptjs.compare(pass, user.password)
     if (!isMatch)
         throw new Error('Password is wrong!')
-    if (user.status !== 'active');
-    throw new Error('not authorized you are blocked')
+    if (user.status !== 'active')
+        throw new Error('not authorized you are blocked')
 
     return user
 }
