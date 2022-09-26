@@ -8,6 +8,8 @@ const auth = async (req, res, next) => {
         const decode = jwt.verify(token, 'EazyMoney')
         console.log(1)
         const user = await User.findOne({ _id: decode._id, tokens: token })
+        if (user.status !== 'active')
+            throw new Error('not authorized you are blocked')
         // console.log(token)
         // console.log(user)
         if (!user)

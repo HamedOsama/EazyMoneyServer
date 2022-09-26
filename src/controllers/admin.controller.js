@@ -76,10 +76,85 @@ const login = async (req, res, next) => {
     // next(ServerError.badRequest(401, e.message))
   }
 }
+const getWebsiteStatistics = async () => {
+  const year = new Date().getFullYear()
+  const users = (await User.countDocuments());
+  const sellers = (await User.countDocuments({ role: 'seller' }));
+  const buyers = (await User.countDocuments({ role: 'buyer' }));
+  const products = await Product.count({});
+  const orders = await Order.countDocuments();
+  const withdrawals = await Withdrawal.countDocuments();
+  const productsChart = new Array(12).fill(0);
+  const withdrawalsChart = new Array(12).fill(0);
+  const ordersChart = new Array(12).fill(0);
+  const createdSellersChart = new Array(12).fill(0);
+  const createdBuyersChart = new Array(12).fill(0);
+  const blockedSellersChart = new Array(12).fill(0);
+  const blockedBuyersChart = new Array(12).fill(0);
+  const ordersThisYear = (await Order.find({
+    createdAt: {
+      $gte: new Date(`${year}-1`),
+      $lte: new Date(`${year}-12`)
+    }
+  }));
+  const withdrawalsThisYear = (await Withdrawal.find({
+    createdAt: {
+      $gte: new Date(`${year}-1`),
+      $lte: new Date(`${year}-12`)
+    }
+  }));
+  const usersThisYear = (await User.find({
+    createdAt: {
+      $gte: new Date(`${year}-1`),
+      $lte: new Date(`${year}-12`)
+    }
+  }));
+  const productThisYear = await Product.find({
+    createdAt: {
+      $gte: new Date(`${year}-1`),
+      $lte: new Date(`${year}-12`)
+    }
+  })
+  usersThisYear.forEach(el => {
+    const index = el.createdAt.getMonth();
+    el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
+    if (el.status === 'not-active')
+      el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
+  })
+  productThisYear.forEach(el => {
+    const index = el.createdAt.getMonth();
+    productsChart[index]++;
+  })
+  ordersThisYear.forEach(el => {
+    const index = el.createdAt.getMonth();
+    ordersChart[index]++;
+  })
+  withdrawalsThisYear.forEach(
+    el => {
+      const index = el.createdAt.getMonth();
+      withdrawalsChart[index]++;
+    }
+  )
+  return {
+    users,
+    sellers,
+    buyers,
+    products,
+    orders,
+    withdrawals,
+    ordersChart,
+    createdSellersChart,
+    createdBuyersChart,
+    blockedSellersChart,
+    blockedBuyersChart,
+    productsChart,
+    withdrawalsChart,
+  }
+}
 const verifyLoginCode = async (req, res, next) => {
   try {
     const code = req.body.code
-    if (code.length !== 10)
+    if (code.length !== 10 || !code)
       return next(ServerError.badRequest(400, 'code is not valid'))
     // const admin = await Admin.logIn(req.body.email, req.body.password)
     const adminWithLoginCode = await Admin.findOne({ LoginCode: code })
@@ -152,68 +227,87 @@ const verifyLoginCode = async (req, res, next) => {
     // const result = fillMissing(productChart)
 
 
-    const users = (await User.countDocuments());
-    // const sellers = (await User.count({ role: 'seller' }));
-    const sellers = (await User.countDocuments({ role: 'seller' }));
-    const buyers = (await User.countDocuments({ role: 'buyer' }));
-    const products = await Product.count({});
-    const year = new Date().getFullYear()
-    const orders = await Order.countDocuments();
-    const ordersThisYear = (await Order.find({
-      createdAt: {
-        $gte: new Date(`${year}-1`),
-        $lte: new Date(`${year}-12`)
-      }
-    }));
-    const productsChart = new Array(12).fill(0);
-    const ordersChart = new Array(12).fill(0);
-    const createdSellersChart = new Array(12).fill(0);
-    const createdBuyersChart = new Array(12).fill(0);
-    const blockedSellersChart = new Array(12).fill(0);
-    const blockedBuyersChart = new Array(12).fill(0);
-    const usersThisYear = (await User.find({
-      createdAt: {
-        $gte: new Date(`${year}-1`),
-        $lte: new Date(`${year}-12`)
-      }
-    }));
-    const productThisYear = await Product.find({
-      createdAt: {
-        $gte: new Date(`${year}-1`),
-        $lte: new Date(`${year}-12`)
-      }
-    })
-    usersThisYear.forEach(el => {
-      const index = el.createdAt.getMonth();
-      el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
-      if (el.status === 'not-active')
-        el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
-    })
-    productThisYear.forEach(el => {
-      const index = el.createdAt.getMonth();
-      productsChart[index]++;
-    })
-    ordersThisYear.forEach(el => {
-      const index = el.createdAt.getMonth();
-      ordersChart[index]++;
-    })
+    // const users = (await User.countDocuments());
+    // // const sellers = (await User.count({ role: 'seller' }));
+    // const sellers = (await User.countDocuments({ role: 'seller' }));
+    // const buyers = (await User.countDocuments({ role: 'buyer' }));
+    // const products = await Product.count({});
+    // const year = new Date().getFullYear()
+    // const orders = await Order.countDocuments();
+    // const withdrawals = await Withdrawal.countDocuments();
+    // const ordersThisYear = (await Order.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // }));
+    // const withdrawalsThisYear = (await Withdrawal.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // }));
+    // const productsChart = new Array(12).fill(0);
+    // const withdrawalsChart = new Array(12).fill(0);
+    // const ordersChart = new Array(12).fill(0);
+    // const createdSellersChart = new Array(12).fill(0);
+    // const createdBuyersChart = new Array(12).fill(0);
+    // const blockedSellersChart = new Array(12).fill(0);
+    // const blockedBuyersChart = new Array(12).fill(0);
+    // const usersThisYear = (await User.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // }));
+    // const productThisYear = await Product.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // })
+    // usersThisYear.forEach(el => {
+    //   const index = el.createdAt.getMonth();
+    //   el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
+    //   if (el.status === 'not-active')
+    //     el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
+    // })
+    // productThisYear.forEach(el => {
+    //   const index = el.createdAt.getMonth();
+    //   productsChart[index]++;
+    // })
+    // ordersThisYear.forEach(el => {
+    //   const index = el.createdAt.getMonth();
+    //   ordersChart[index]++;
+    // })
+    // withdrawalsThisYear.forEach(
+    //   el => {
+    //     const index = el.createdAt.getMonth();
+    //     withdrawalsChart[index]++;
+    //   }
+    // )
+    const websiteStatistics = await getWebsiteStatistics();
+
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       data: {
         admin: adminWithLoginCode,
-        users,
-        sellers,
-        buyers,
-        products,
-        orders,
-        ordersChart,
-        createdSellersChart,
-        createdBuyersChart,
-        blockedSellersChart,
-        blockedBuyersChart,
-        productsChart,
+        ...websiteStatistics
+        // users,
+        // sellers,
+        // buyers,
+        // products,
+        // orders,
+        // withdrawals,
+        // ordersChart,
+        // createdSellersChart,
+        // createdBuyersChart,
+        // blockedSellersChart,
+        // blockedBuyersChart,
+        // productsChart,
+        // withdrawalsChart,
         // result
         // productThisYear,
         // productsChart,
@@ -246,68 +340,85 @@ const getAdminData = async (req, res, next) => {
     // if (req.admin.id !== admin.id) {
     // return next(ServerError.badRequest(403, "Not Authorized"));
     // }
-    const users = (await User.countDocuments());
     // const sellers = (await User.count({ role: 'seller' }));
-    const sellers = (await User.countDocuments({ role: 'seller' }));
-    const buyers = (await User.countDocuments({ role: 'buyer' }));
-    const products = await Product.count({});
-    const year = new Date().getFullYear()
-    const orders = await Order.countDocuments();
-    const ordersThisYear = (await Order.find({
-      createdAt: {
-        $gte: new Date(`${year}-1`),
-        $lte: new Date(`${year}-12`)
-      }
-    }));
-    const ordersChart = new Array(12).fill(0);
-    const productsChart = new Array(12).fill(0);
-    const createdSellersChart = new Array(12).fill(0);
-    const createdBuyersChart = new Array(12).fill(0);
-    const blockedSellersChart = new Array(12).fill(0);
-    const blockedBuyersChart = new Array(12).fill(0);
-    const usersThisYear = (await User.find({
-      createdAt: {
-        $gte: new Date(`${year}-1`),
-        $lte: new Date(`${year}-12`)
-      }
-    }));
-    const productThisYear = await Product.find({
-      createdAt: {
-        $gte: new Date(`${year}-1`),
-        $lte: new Date(`${year}-12`)
-      }
-    })
-    usersThisYear.forEach(el => {
-      const index = el.createdAt.getMonth();
-      el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
-      if (el.status === 'not-active')
-        el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
-    })
-    productThisYear.forEach(el => {
-      const index = el.createdAt.getMonth();
-      productsChart[index]++;
-    })
-    ordersThisYear.forEach(el => {
-      const index = el.createdAt.getMonth();
-      ordersChart[index]++;
-    })
+    // const users = (await User.countDocuments());
+    // const sellers = (await User.countDocuments({ role: 'seller' }));
+    // const buyers = (await User.countDocuments({ role: 'buyer' }));
+    // const products = await Product.count({});
+    // const year = new Date().getFullYear()
+    // const orders = await Order.countDocuments();
+    // const withdrawals = await Withdrawal.countDocuments();
+    // const ordersThisYear = (await Order.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // }));
+    // const withdrawalsThisYear = (await Withdrawal.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // }));
+    // const ordersChart = new Array(12).fill(0);
+    // const withdrawalsChart = new Array(12).fill(0);
+    // const productsChart = new Array(12).fill(0);
+    // const createdSellersChart = new Array(12).fill(0);
+    // const createdBuyersChart = new Array(12).fill(0);
+    // const blockedSellersChart = new Array(12).fill(0);
+    // const blockedBuyersChart = new Array(12).fill(0);
+    // const usersThisYear = (await User.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // }));
+    // const productThisYear = await Product.find({
+    //   createdAt: {
+    //     $gte: new Date(`${year}-1`),
+    //     $lte: new Date(`${year}-12`)
+    //   }
+    // })
+    // usersThisYear.forEach(el => {
+    //   const index = el.createdAt.getMonth();
+    //   el.role === 'seller' ? createdSellersChart[index]++ : createdBuyersChart[index]++;
+    //   if (el.status === 'not-active')
+    //     el.role === 'seller' ? blockedSellersChart[index]++ : blockedBuyersChart[index]++;
+    // })
+    // productThisYear.forEach(el => {
+    //   const index = el.createdAt.getMonth();
+    //   productsChart[index]++;
+    // })
+    // ordersThisYear.forEach(el => {
+    //   const index = el.createdAt.getMonth();
+    //   ordersChart[index]++;
+    // })
+    // withdrawalsThisYear.forEach(
+    //   el => {
+    //     const index = el.createdAt.getMonth();
+    //     withdrawalsChart[index]++;
+    //   }
+    // )
+    const websiteStatistics = await getWebsiteStatistics();
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       data: req.admin,
-      users,
-      sellers,
-      buyers,
-      products,
-      orders,
-      ordersChart,
-      productsChart,
-      createdSellersChart,
-      createdBuyersChart,
-      blockedSellersChart,
-      blockedBuyersChart,
-
+      ...websiteStatistics
+      // users,
+      // sellers,
+      // buyers,
+      // products,
+      // orders,
+      // withdrawals,
+      // ordersChart,
+      // productsChart,
+      // createdSellersChart,
+      // createdBuyersChart,
+      // blockedSellersChart,
+      // blockedBuyersChart,
+      // withdrawalsChart,
     })
   }
   catch (e) {

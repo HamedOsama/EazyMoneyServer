@@ -138,10 +138,13 @@ userSchema.pre('save', async function () {
 userSchema.statics.Login = async function (mail, pass) {
     const user = await User.findOne({ email: mail })
     if (!user)
-        throw new Error('Email is not valid!')
+        throw new Error('Email is not valid!');
     const isMatch = await bcryptjs.compare(pass, user.password)
     if (!isMatch)
         throw new Error('Password is wrong!')
+    if (user.status !== 'active');
+    throw new Error('not authorized you are blocked')
+
     return user
 }
 userSchema.methods.generateToken = async function () {
