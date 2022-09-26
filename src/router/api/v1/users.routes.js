@@ -18,6 +18,7 @@ routes.route('/get-user').get(auth, usersController.getUser)
 //order
 routes.route('/order/seller').get(auth, usersController.getSellerOrders)
 routes.route('/order/buyer').get(auth, usersController.getBuyerOrders)
+routes.route('/order/buyer/:id').get(auth, usersController.getBuyerOrderById)
 
 //withdrawal
 routes.route('/withdrawal/buyer').get(auth, usersController.getBuyerWithdrawals);

@@ -10,6 +10,8 @@ const ServerError = require('../interface/Error');
 // const e = require('express');
 const ApiFeatures = require('../utils/ApiFeatures');
 const Withdrawal = require('../model/withdrawal');
+const Order = require('../model/order');
+const Product = require('../model/product');
 const { sendgridApiKey, sendgridEmail } = config
 
 const Uploads = multer({
@@ -104,7 +106,7 @@ const getSellerOrders = async (req, res, next) => {
       return next(ServerError.badRequest(401, "token is not valid"));
     }
     if (req.user.role !== 'seller') {
-      return next(ServerError.badRequest(403, "not authorized"));
+      return next(ServerError.badRequest(401, "not authorized"));
     }
     await req.user.populate('sellerOrders', {
       productId: 1,
@@ -134,15 +136,79 @@ const getSellerOrders = async (req, res, next) => {
     next(e)
   }
 }
+const addMoreDataToOrder = async (orders) => {
+  const newOrders = [];
+  for (const el of orders) {
+    const product = await Product.findById({ _id: el.productId }, {
+      reviews: 0,
+      originalPrice: 0
+    });
+    const newOrderForm = { ...el._doc };
+    newOrderForm.OrderedProduct = product;
+    newOrderForm.OrderedProperties = el.orderItems.map(orderProperty => product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
+    newOrders.push(newOrderForm)
+  }
+  return newOrders;
+}
 const getBuyerOrders = async (req, res, next) => {
   try {
-    if (!req.user) {
+    const user = req.user;
+    if (!user) {
       return next(ServerError.badRequest(401, "token is not valid"));
     }
-    if (req.user.role !== 'buyer') {
-      return next(ServerError.badRequest(403, "not authorized"));
+    if (user.role !== 'buyer') {
+      return next(ServerError.badRequest(401, "not authorized"));
     }
-    await req.user.populate('buyerOrders', {
+
+    const orders = await ApiFeatures.pagination(
+      Order.find({ buyerId: user._id }, {
+        productId: 1,
+        orderItems: 1,
+        totalPrice: 1,
+        name: 1,
+        phone: 1,
+        city: 1,
+        area: 1,
+        address: 1,
+        subAddress: 1,
+        shippingPrice: 1,
+        storeName: 1,
+        comment: 1,
+        orderState: 1,
+        createdAt: 1,
+        buyerCommission: 1,
+        sellPrice: 1,
+        newPrice: 1,
+      }), req.query
+    )
+    const ordersNewForm = await addMoreDataToOrder(orders);
+    console.log(ordersNewForm)
+    const totalLength = await Order.countDocuments({ buyerId: user._id })
+    // const allOrders = req.user.buyerOrders; // all orders
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: ordersNewForm,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+const getBuyerOrderById = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return next(ServerError.badRequest(401, "token is not valid"));
+    }
+    if (user.role !== 'buyer') {
+      return next(ServerError.badRequest(401, "not authorized"));
+    }
+    const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'order id not valid'));
+    const order = await Order.findOne({ _id: id, buyerId: user._id }, {
       productId: 1,
       orderItems: 1,
       totalPrice: 1,
@@ -160,17 +226,26 @@ const getBuyerOrders = async (req, res, next) => {
       buyerCommission: 1,
       sellPrice: 1,
       newPrice: 1,
-    }
-    )
-    const allOrders = req.user.buyerOrders; // all orders
+    })
+    if (!order)
+      return next(ServerError.badRequest(400, 'order id not valid'));
+    const OrderedProduct = await Product.findById({ _id: order.productId }, {
+      reviews: 0,
+      originalPrice: 0
+    });
+    const OrderedProperties = order.orderItems.map(orderProperty => OrderedProduct.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      body: allOrders
+      body: {
+        order,
+        OrderedProduct,
+        OrderedProperties
+      }
     })
   } catch (e) {
-    next(e)
+    next(e);
   }
 }
 const getUser = async (req, res, next) => {
@@ -501,7 +576,7 @@ const getBuyerWithdrawals = async (req, res, next) => {
   try {
     const user = req.user
     if (user.role !== 'buyer')
-      return next(ServerError.badRequest(403, 'not authorized'));
+      return next(ServerError.badRequest(401, 'not authorized'));
     // user.populate('buyerWithdrawals');
 
     const withdrawals = await ApiFeatures.pagination(
@@ -535,6 +610,7 @@ module.exports = {
   resetPassword,
   forgetPassword,
   Uploads,
+  getBuyerOrderById,
   getSellerOrders,
   getBuyerOrders,
   getBuyerWithdrawals,
