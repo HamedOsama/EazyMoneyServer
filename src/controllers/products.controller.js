@@ -108,11 +108,14 @@ const getProductsByCategory = async (req, res, next) => {
     const products = await ApiFeatures.pagination(Product.find({ category: new RegExp(catName, 'i') })
       , req.query)
     // const products = await Product.find({ category: new RegExp(catName, 'i') });
+    const totalLength = await Product.countDocuments({ category: new RegExp(catName, 'i') })
+
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       body: products,
+      totalLength
     });
   } catch (e) {
     next(e)
@@ -130,11 +133,13 @@ const getProductsByName = async (req, res, next) => {
     const products = await ApiFeatures.pagination(
       Product.find({ name: { $regex: new RegExp(productName, "i") } }),
       req.query)
+    const totalLength = await Product.countDocuments({ name: { $regex: new RegExp(productName, "i") } })
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       body: products,
+      totalLength
     });
   } catch (e) {
     next(e)
@@ -149,12 +154,14 @@ const getProductsBySellerID = async (req, res, next) => {
     // const products = await Product.find({ seller: sellerId });
     const products = await ApiFeatures.pagination(
       Product.find({ seller: sellerId }),
-      req.body.page, req.body.amount)
+      req.query)
+    const totalLength = await Product.countDocuments({ seller: sellerId })
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       body: products,
+      totalLength
     });
   } catch (e) {
     next(e)
