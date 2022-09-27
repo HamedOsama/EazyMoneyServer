@@ -100,42 +100,6 @@ const updateUser = async (req, res, next) => {
     // res.status(500).send(e.message);
   }
 };
-const getSellerOrders = async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return next(ServerError.badRequest(401, "token is not valid"));
-    }
-    if (req.user.role !== 'seller') {
-      return next(ServerError.badRequest(401, "not authorized"));
-    }
-    await req.user.populate('sellerOrders', {
-      productId: 1,
-      orderItems: 1,
-      totalPrice: 1,
-      name: 1,
-      phone: 1,
-      city: 1,
-      area: 1,
-      address: 1,
-      subAddress: 1,
-      shippingPrice: 1,
-      storeName: 1,
-      comment: 1,
-      orderState: 1,
-      createdAt: 1
-    }, { orderState: { $ne: 0 } }
-    )
-    const allOrders = req.user.sellerOrders; // all orders
-    res.status(200).json({
-      ok: true,
-      code: 200,
-      message: 'succeeded',
-      body: allOrders
-    })
-  } catch (e) {
-    next(e)
-  }
-}
 const addMoreDataToOrder = async (orders) => {
   const newOrders = [];
   for (const el of orders) {
@@ -145,11 +109,75 @@ const addMoreDataToOrder = async (orders) => {
     });
     const newOrderForm = { ...el._doc };
     newOrderForm.OrderedProduct = product;
-    newOrderForm.OrderedProperties = el.orderItems.map(orderProperty => product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
+    newOrderForm.OrderedProperties = el.orderItems.map(orderProperty => {
+      const propertiesNewForm = product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString());
+      propertiesNewForm.amount = orderProperty.quantity;
+      return propertiesNewForm;
+    })
     newOrders.push(newOrderForm)
   }
   return newOrders;
 }
+const getSellerOrders = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return next(ServerError.badRequest(401, "token is not valid"));
+    }
+    if (user.role !== 'seller') {
+      return next(ServerError.badRequest(401, "not authorized"));
+    }
+    const orders = await ApiFeatures.pagination(
+      Order.find({ sellerId: user._id }, {
+        productId: 1,
+        orderItems: 1,
+        totalPrice: 1,
+        name: 1,
+        phone: 1,
+        city: 1,
+        area: 1,
+        address: 1,
+        subAddress: 1,
+        shippingPrice: 1,
+        storeName: 1,
+        comment: 1,
+        orderState: 1,
+        createdAt: 1
+      }, { orderState: { $ne: 0 } })
+      , req.query)
+    const ordersNewForm = await addMoreDataToOrder(orders);
+    // console.log(ordersNewForm)
+    const totalLength = await Order.countDocuments({ sellerId: user._id })
+    // await req.user.populate('sellerOrders', {
+    // productId: 1,
+    //   orderItems: 1,
+    //   totalPrice: 1,
+    //   name: 1,
+    //   phone: 1,
+    //   city: 1,
+    //   area: 1,
+    //   address: 1,
+    //   subAddress: 1,
+    //   shippingPrice: 1,
+    //   storeName: 1,
+    //   comment: 1,
+    //   orderState: 1,
+    //   createdAt: 1
+    // }, { orderState: { $ne: 0 } }
+    // )
+    // const allOrders = req.user.sellerOrders; // all orders
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: ordersNewForm,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
 const getBuyerOrders = async (req, res, next) => {
   try {
     const user = req.user;
@@ -182,7 +210,7 @@ const getBuyerOrders = async (req, res, next) => {
       }), req.query
     )
     const ordersNewForm = await addMoreDataToOrder(orders);
-    console.log(ordersNewForm)
+    // console.log(ordersNewForm)
     const totalLength = await Order.countDocuments({ buyerId: user._id })
     // const allOrders = req.user.buyerOrders; // all orders
     res.status(200).json({
