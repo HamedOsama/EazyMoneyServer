@@ -1154,7 +1154,11 @@ const addMoreDataToOrder = async (orders) => {
     newOrderForm.OrderedProduct = product;
     newOrderForm.buyer = buyer;
     newOrderForm.seller = seller;
-    newOrderForm.OrderedProperties = orders.orderItems.map(orderProperty => product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString()))
+    newOrderForm.OrderedProperties = orders.orderItems.map(orderProperty => {
+      const propertiesNewForm = product.properties.find(property => property._id.toString() === orderProperty.propertyId.toString())
+      propertiesNewForm.amount = orderProperty.quantity;
+      return propertiesNewForm;
+    })
     return newOrderForm;
   }
   for (const el of orders) {
