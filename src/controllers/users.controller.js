@@ -624,6 +624,19 @@ const getBuyerWithdrawals = async (req, res, next) => {
     next(e)
   }
 }
+const getUserBalance = async (req, res, next) => {
+  const user = req.user
+  if (user.role !== 'buyer')
+    return next(ServerError.badRequest(401, 'not authorized'));
+  const balance = await User.findById({ _id: user._id }, { balance: 1, _id: 0 });
+  res.status(200).json({
+    ok: true,
+    code: 200,
+    message: 'succeeded',
+    data: balance,
+
+  })
+}
 module.exports = {
   signup,
   getUser,
@@ -642,4 +655,5 @@ module.exports = {
   getSellerOrders,
   getBuyerOrders,
   getBuyerWithdrawals,
+  getUserBalance
 };

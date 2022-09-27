@@ -155,6 +155,9 @@ const updateOrder = async (req, res, next) => {
       return next(ServerError.badRequest(400, 'order can not modified after it is finished'));
     }
     const orderState = req.body.orderState;
+    if (order.orderState === 0 && orderState > 1) {
+      return next(ServerError.badRequest(400, 'order must be confirmed first'));
+    }
     if (!orderState)
       return next(ServerError.badRequest(400, 'please put orderState in body'));
     if (![-4, -3, -2, 2, 3].includes(orderState))

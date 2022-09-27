@@ -20,6 +20,10 @@ routes.route('/order/seller').get(auth, usersController.getSellerOrders)
 routes.route('/order/buyer').get(auth, usersController.getBuyerOrders)
 routes.route('/order/buyer/:id').get(auth, usersController.getBuyerOrderById)
 
+
+//balance 
+routes.route('/balance').get(auth, usersController.getUserBalance)
+
 //withdrawal
 routes.route('/withdrawal/buyer').get(auth, usersController.getBuyerWithdrawals);
 

@@ -36,6 +36,8 @@ const userSchema = mongoose.Schema({
         trim: true,
         validate(value) {
             let strongPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])")
+            if (value.length < 8)
+                throw new Error("password length must be at least 8")
             if (!strongPass.test(value))
                 throw new Error("password must contain at least one capital/small letter & special characters and number")
         }
