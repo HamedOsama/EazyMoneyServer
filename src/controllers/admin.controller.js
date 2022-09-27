@@ -758,13 +758,13 @@ const logoutUserFromAllDevices = async (req, res, next) => {
 }
 
 
-const getUser = async (req, res, next) => {
+const getUserById = async (req, res, next) => {
   try {
 
     const userId = req.params.id
     if (!userId)
       return next(ServerError.badRequest(400, 'please send id'))
-    const user = await User.find({ _id: userId })
+    const user = await User.findById({ _id: userId })
     if (!user) {
       return next(ServerError.badRequest(400, 'unable to find any user match this ID'))
       // res.status(404).send("unable to found any user match this ID")
@@ -784,7 +784,50 @@ const getUser = async (req, res, next) => {
     // res.status(400).send(e.message)
   }
 }
-
+const getUserByPhoneNumber = async (req, res, next) => {
+  try {
+    const userPhone = req.params.phone
+    if (!userPhone)
+      return next(ServerError.badRequest(400, 'please send user phone number'))
+    const user = await User.findOne({ phone: userPhone })
+    if (!user) {
+      return next(ServerError.badRequest(400, 'unable to find any user match this phone number'))
+    }
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: user
+    })
+  }
+  catch (e) {
+    next(e)
+  }
+}
+const getBuyerOrSellerByPhoneNumber = async (req, res, next) => {
+  try {
+    const validRoles = ['seller', 'buyer']
+    const userPhone = req.params.phone
+    if (!userPhone)
+      return next(ServerError.badRequest(400, 'please send user phone number'))
+    const role = req.query.role;
+    if (!role || !validRoles.includes(role))
+      return next(ServerError.badRequest(400, 'please send valid user role'))
+    const user = await User.findOne({ phone: userPhone, role })
+    if (!user) {
+      return next(ServerError.badRequest(400, `unable to find any ${role} match this phone number`))
+    }
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: user
+    })
+  }
+  catch (e) {
+    next(e)
+  }
+}
 const addProduct = async (req, res, next) => {
   try {
     const product = new Product(req.body)
@@ -1571,8 +1614,10 @@ module.exports = {
   getAllUsers,
   getAllBuyers,
   getAllSellers,
-  getUser,
+  getUserById,
   updateUser,
+  getUserByPhoneNumber,
+  getBuyerOrSellerByPhoneNumber,
   logoutUserFromAllDevices,
   addProduct,
   getAllProducts,
