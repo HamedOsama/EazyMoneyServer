@@ -56,6 +56,7 @@ routes.route('/products/product/:id').patch(auth, Uploads.array('avatar', 8), ad
 
 // withdrawal
 routes.route('/withdrawal/all').get(auth, adminController.getAllWithdrawals)
+routes.route('/withdrawal/paid').get(auth, adminController.getUnpaidWithdrawals)
 routes.route('/withdrawal/:id').get(auth, adminController.getWithdrawalById)
 routes.route('/withdrawal/buyer/:id').get(auth, adminController.getWithdrawalsByBuyerId)
 routes.route('/withdrawal/phone/:phone').get(auth, adminController.getWithdrawalsByPaymentPhone)

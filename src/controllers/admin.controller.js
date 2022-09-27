@@ -1512,10 +1512,34 @@ const getWithdrawalsByPaymentPhone = async (req, res, next) => {
 const getAllWithdrawals = async (req, res, next) => {
   try {
     const withdrawals = await ApiFeatures.pagination(
-      Withdrawal.find({}),
+      Withdrawal.find({}).sort({ createdAt: -1 }),
       req.query
     )
     const totalLength = await Withdrawal.countDocuments({})
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawals,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
+const getUnpaidWithdrawals = async (req, res, next) => {
+  try {
+    const paid = req.query.paid;
+    console.log(paid)
+    if (!paid)
+      return next(ServerError.badRequest(400, 'no state sent'));
+    const paidState = paid === 'yes' ? 1 : 0
+    const withdrawals = await ApiFeatures.pagination(
+      Withdrawal.find({ state: paidState }).sort({ createdAt: -1 }),
+      req.query
+    )
+    const totalLength = await Withdrawal.countDocuments({ state: paidState })
     res.status(200).json({
       ok: true,
       code: 200,
@@ -1565,4 +1589,5 @@ module.exports = {
   getWithdrawalsByBuyerId,
   getWithdrawalsByPaymentPhone,
   getAllWithdrawals,
+  getUnpaidWithdrawals,
 }
