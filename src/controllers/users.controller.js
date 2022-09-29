@@ -310,46 +310,45 @@ const getUser = async (req, res, next) => {
     const user = req.user;
     // await req.user.populate('sellerOrders')
     // console.log(req.user.sellerOrders)
-    const sellerData = {};
-    if (user.role === 'seller') {
-      await user.populate('sellerOrders', {
-        productId: 1,
-        orderItems: 1,
-        totalPrice: 1,
-        name: 1,
-        phone: 1,
-        city: 1,
-        area: 1,
-        address: 1,
-        subAddress: 1,
-        shippingPrice: 1,
-        storeName: 1,
-        comment: 1,
-        orderState: 1,
-        createdAt: 1
-      }, { orderState: { $ne: 0 } }
-      )
-      sellerData.allOrders = req.user.sellerOrders; // all orders
-      sellerData.finishedOrders = req.user.sellerOrders.filter(el => el.orderState === 4); // succeeded orders
-      sellerData.OrdersReturned = req.user.sellerOrders.filter(el => el.orderState === -5); // Returned orders
-      sellerData.OrdersCancelledByCustomer = req.user.sellerOrders.filter(el => el.orderState === -4); // Cancelled orders by Customer
-      sellerData.OrdersCancelledByBuyer = req.user.sellerOrders.filter(el => el.orderState === -3); // Cancelled orders by Buyer
-      sellerData.OrdersCancelledByYou = req.user.sellerOrders.filter(el => el.orderState === -2); // Cancelled orders by you
+    // const sellerData = {};
+    // if (user.role === 'seller') {
+    //   await user.populate('sellerOrders', {
+    //     productId: 1,
+    //     orderItems: 1,
+    //     totalPrice: 1,
+    //     name: 1,
+    //     phone: 1,
+    //     city: 1,
+    //     area: 1,
+    //     address: 1,
+    //     subAddress: 1,
+    //     shippingPrice: 1,
+    //     storeName: 1,
+    //     comment: 1,
+    //     orderState: 1,
+    //     createdAt: 1
+    //   }, { orderState: { $ne: 0 } }
+    //   )
+    //   sellerData.allOrders = req.user.sellerOrders; // all orders
+    //   sellerData.finishedOrders = req.user.sellerOrders.filter(el => el.orderState === 4); // succeeded orders
+    //   sellerData.OrdersReturned = req.user.sellerOrders.filter(el => el.orderState === -5); // Returned orders
+    //   sellerData.OrdersCancelledByCustomer = req.user.sellerOrders.filter(el => el.orderState === -4); // Cancelled orders by Customer
+    //   sellerData.OrdersCancelledByBuyer = req.user.sellerOrders.filter(el => el.orderState === -3); // Cancelled orders by Buyer
+    //   sellerData.OrdersCancelledByYou = req.user.sellerOrders.filter(el => el.orderState === -2); // Cancelled orders by you
 
 
 
-      // sellerData.OrdersCancelledByAdmin = req.user.sellerOrders.filter(el => el.orderState === -1); // Cancelled orders by admin
+    // sellerData.OrdersCancelledByAdmin = req.user.sellerOrders.filter(el => el.orderState === -1); // Cancelled orders by admin
 
 
 
-      // .find({ orderState: { $get: 1, $lte: -1 } })
-      // console.log(req.user.orders)
-    }
+    // .find({ orderState: { $get: 1, $lte: -1 } })
+    // console.log(req.user.orders)
+    // }
     // return res.status(200).send(req.user.orders)
     // console.log(req.user)
     // console.log(_doc);
-    const { _doc } = req.user
-
+    // const { _doc } = req.user
     res.status(200).json({
       ok: true,
       code: 200,

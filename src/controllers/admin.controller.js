@@ -1487,6 +1487,7 @@ const updateWithdrawal = async (req, res, next) => {
       ok: true,
       code: 200,
       message: 'succeeded',
+      data: withdrawal
     })
   } catch (e) {
     next(e);
