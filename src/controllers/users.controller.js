@@ -354,14 +354,14 @@ const getUser = async (req, res, next) => {
       ok: true,
       code: 200,
       message: 'succeeded',
-      body: {
-        // req.user
-        // ...req.user.lean(),
-        ..._doc,
-        ...sellerData
-        // withdrawnProfit,
-        // balanceUnderReview
-      }
+      body:
+        req.user
+      // ...req.user.lean(),
+      // ..._doc,
+      // ...sellerData
+      // withdrawnProfit,
+      // balanceUnderReview
+
     })
   } catch (e) {
     // e.statusCode = 400
