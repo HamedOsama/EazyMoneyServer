@@ -55,11 +55,13 @@ const getAll = async (req, res, next) => {
       status: 1
     }), req.query)
     // const test = await Product.updateMany({}, { image: [] }); // update many
+    const totalLength = await Product.countDocuments({});
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
       body: products,
+      totalLength,
     });
   } catch (e) {
     next(e)

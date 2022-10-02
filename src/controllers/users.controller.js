@@ -40,6 +40,54 @@ const signup = async (req, res, next) => {
     next(e)
   }
 };
+
+const getBuyerData = async (user) => {
+  const userData = {}
+  userData.user = { ...user._doc }
+  // Balance
+  userData.AvailableBalance = user.balance;
+  userData.pendingWithdrawals = (await Withdrawal.find({ buyerId: user._id, state: 0 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0);
+  userData.WithdrawnBalance = (await Withdrawal.find({ buyerId: user._id, state: 1 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0);
+  userData.profit = userData.AvailableBalance + userData.WithdrawnBalance;
+  userData.pendingBalance = (await Order.find({ buyerId: user._id, state: { $gte: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0);
+  userData.cancelledBalance = (await Order.find({ buyerId: user._id, state: { $lt: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0);
+  // orders
+  userData.allOrders = await Order.countDocuments({ buyerId: user._id });
+  userData.ordersUnderReview = await Order.countDocuments({ buyerId: user._id, orderState: 0 });
+  userData.ordersUnderProcess = await Order.countDocuments({ buyerId: user._id, orderState: 1 });
+  userData.ordersSentToShippingCompany = await Order.countDocuments({ buyerId: user._id, orderState: 2 });
+  userData.ordersShipped = await Order.countDocuments({ buyerId: user._id, orderState: 3 });
+  userData.ordersFinished = await Order.countDocuments({ buyerId: user._id, orderState: 4 });
+  userData.cancelledOrders = await Order.countDocuments({ buyerId: user._id, orderState: { $lte: -1 } });
+  userData.cancelledOrdersByAdmin = await Order.countDocuments({ buyerId: user._id, orderState: -1 });
+  userData.cancelledOrdersBySeller = await Order.countDocuments({ buyerId: user._id, orderState: -2 });
+  userData.cancelledOrdersByBuyer = await Order.countDocuments({ buyerId: user._id, orderState: -3 });
+  userData.cancelledOrdersByCustomer = await Order.countDocuments({ buyerId: user._id, orderState: -4 });
+  userData.returnedOrders = await Order.countDocuments({ buyerId: user._id, orderState: -4 });
+  return userData;
+}
+const getSellerData = async (user) => {
+  const userData = {}
+  userData.user = { ...user._doc }
+  // orders
+  userData.allOrders = await Order.countDocuments({ sellerId: user._id });
+  userData.ordersUnderReview = await Order.countDocuments({ sellerId: user._id, orderState: 0 });
+  userData.ordersUnderProcess = await Order.countDocuments({ sellerId: user._id, orderState: 1 });
+  userData.ordersSentToShippingCompany = await Order.countDocuments({ sellerId: user._id, orderState: 2 });
+  userData.ordersShipped = await Order.countDocuments({ sellerId: user._id, orderState: 3 });
+  userData.ordersFinished = await Order.countDocuments({ sellerId: user._id, orderState: 4 });
+  userData.cancelledOrders = await Order.countDocuments({ sellerId: user._id, orderState: { $lte: -1 } });
+  userData.cancelledOrdersByAdmin = await Order.countDocuments({ sellerId: user._id, orderState: -1 });
+  userData.cancelledOrdersBySeller = await Order.countDocuments({ sellerId: user._id, orderState: -2 });
+  userData.cancelledOrdersByBuyer = await Order.countDocuments({ sellerId: user._id, orderState: -3 });
+  userData.cancelledOrdersByCustomer = await Order.countDocuments({ sellerId: user._id, orderState: -4 });
+  userData.returnedOrders = await Order.countDocuments({ sellerId: user._id, orderState: -4 });
+  userData.ratioOfFinishedOrdersToReturnedOrders = ordersFinished / (ordersFinished + returnedOrders);
+  // products
+  userData.allProducts = await Product.countDocuments({ seller: user._id });
+  userData.totalStock = (await Product.find({ seller: user._id })).reduce((acc, cur) => acc + cur.total_amount, 0);
+  return userData;
+}
 const login = async (req, res, next) => {
   try {
     const user = await User.Login(req.body.email, req.body.password);
@@ -307,7 +355,14 @@ const getUser = async (req, res, next) => {
     //     })
     // })
     // }
+    console.log(1)
     const user = req.user;
+    let newUserForm;
+    if (user.role === 'buyer')
+      newUserForm = await getBuyerData(user);
+    if (user.role === 'seller')
+      newUserForm = await getSellerData(user);
+
     // await req.user.populate('sellerOrders')
     // console.log(req.user.sellerOrders)
     // const sellerData = {};
@@ -349,12 +404,12 @@ const getUser = async (req, res, next) => {
     // console.log(req.user)
     // console.log(_doc);
     // const { _doc } = req.user
+
     res.status(200).json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      body:
-        req.user
+      body: newUserForm
       // ...req.user.lean(),
       // ..._doc,
       // ...sellerData
@@ -394,9 +449,6 @@ const changePassword = async (req, res, next) => {
     // res.status.apply(500).send(e.message);
   }
 };
-
-
-
 
 
 const getAll = async (req, res, next) => {
@@ -636,6 +688,22 @@ const getUserBalance = async (req, res, next) => {
 
   })
 }
+const getLatestWithdrawals = async (req, res, next) => {
+  try {
+    const user = req.user
+    if (user.role !== 'buyer')
+      return next(ServerError.badRequest(401, 'not authorized'));
+    const withdrawals = await Withdrawal.find({ buyerId: req.user._id }).limit(5);
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: withdrawals,
+    })
+  } catch (e) {
+    next(e)
+  }
+}
 module.exports = {
   signup,
   getUser,
@@ -654,5 +722,6 @@ module.exports = {
   getSellerOrders,
   getBuyerOrders,
   getBuyerWithdrawals,
-  getUserBalance
+  getUserBalance,
+  getLatestWithdrawals
 };

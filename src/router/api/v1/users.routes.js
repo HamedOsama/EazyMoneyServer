@@ -26,6 +26,7 @@ routes.route('/balance').get(auth, usersController.getUserBalance)
 
 //withdrawal
 routes.route('/withdrawal/buyer').get(auth, usersController.getBuyerWithdrawals);
+routes.route('/withdrawal/buyer/latest').get(auth, usersController.getLatestWithdrawals);
 
 routes.route('/change-password').put(auth, usersController.changePassword)
 routes.route('/logout').delete(auth, usersController.logout)
