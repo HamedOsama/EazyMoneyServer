@@ -82,7 +82,7 @@ const getSellerData = async (user) => {
   userData.cancelledOrdersByBuyer = await Order.countDocuments({ sellerId: user._id, orderState: -3 });
   userData.cancelledOrdersByCustomer = await Order.countDocuments({ sellerId: user._id, orderState: -4 });
   userData.returnedOrders = await Order.countDocuments({ sellerId: user._id, orderState: -4 });
-  userData.ratioOfFinishedOrdersToReturnedOrders = ordersFinished / (ordersFinished + returnedOrders);
+  userData.ratioOfFinishedOrdersToReturnedOrders = (userData.ordersFinished / (userData.ordersFinished + userData.returnedOrders)) * 100;
   // products
   userData.allProducts = await Product.countDocuments({ seller: user._id });
   userData.totalStock = (await Product.find({ seller: user._id })).reduce((acc, cur) => acc + cur.total_amount, 0);
