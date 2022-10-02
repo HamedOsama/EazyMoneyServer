@@ -92,11 +92,16 @@ const login = async (req, res, next) => {
   try {
     const user = await User.Login(req.body.email, req.body.password);
     const token = await user.generateToken();
+    let newUserForm;
+    if (user.role === 'buyer')
+      newUserForm = await getBuyerData(user);
+    if (user.role === 'seller')
+      newUserForm = await getSellerData(user);
     res.json({
       ok: true,
       code: 200,
       message: 'succeeded',
-      body: user,
+      body: newUserForm,
       token,
     });
   } catch (e) {
