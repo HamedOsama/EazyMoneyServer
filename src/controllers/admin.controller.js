@@ -1625,7 +1625,7 @@ const getClosedContacts = async (req, res, next) => {
     const state = req.query.state;
     if (!state)
       return next(ServerError.badRequest(400, 'no state sent'));
-    const intState = state === 'opened' ? 1 : 0
+    const intState = state === 'opened' ? 0 : 1
     const contacts = await ApiFeatures.pagination(
       ContactUs.find({ state: intState }).sort({ createdAt: -1 }),
       req.query
