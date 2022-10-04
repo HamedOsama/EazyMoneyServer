@@ -1630,7 +1630,7 @@ const getClosedContacts = async (req, res, next) => {
       ContactUs.find({ state: intState }).sort({ createdAt: -1 }),
       req.query
     )
-    const totalLength = await ContactUs.countDocuments({ state: paidState })
+    const totalLength = await ContactUs.countDocuments({ state: intState })
     res.status(200).json({
       ok: true,
       code: 200,
