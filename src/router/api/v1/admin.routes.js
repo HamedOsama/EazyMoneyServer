@@ -64,4 +64,10 @@ routes.route('/withdrawal/buyer/:id').get(auth, adminController.getWithdrawalsBy
 routes.route('/withdrawal/phone/:phone').get(auth, adminController.getWithdrawalsByPaymentPhone)
 
 routes.route('/withdrawal/:id').patch(auth, adminController.updateWithdrawal)
+
+// contact Us 
+routes.route('/contact-us/all').get(auth, adminController.getAllContacts)
+routes.route('/contact-us/all/opened').get(auth, adminController.getClosedContacts)
+routes.route('/contact-us/:id').patch(auth, adminController.updateContact)
+
 module.exports = routes

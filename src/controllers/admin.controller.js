@@ -1,6 +1,7 @@
 const config = require('../../config');
 const Admin = require('../model/admin')
 const { User } = require('../model/user')
+const ContactUs = require('../model/contactUs');
 const Product = require('../model/product')
 const multer = require('multer')
 const ServerError = require('../interface/Error')
@@ -1601,6 +1602,68 @@ const getUnpaidWithdrawals = async (req, res, next) => {
     next(e)
   }
 }
+const getAllContacts = async (req, res, next) => {
+  try {
+    const contacts = await ApiFeatures.pagination(
+      ContactUs.find({}).sort({ createdAt: -1 }),
+      req.query
+    )
+    const totalLength = await ContactUs.countDocuments({})
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: contacts,
+      totalLength
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+const getClosedContacts = async (req, res, next) => {
+  try {
+    const state = req.query.state;
+    if (!state)
+      return next(ServerError.badRequest(400, 'no state sent'));
+    const intState = state === 'opened' ? 1 : 0
+    const contacts = await ApiFeatures.pagination(
+      ContactUs.find({ state: intState }).sort({ createdAt: -1 }),
+      req.query
+    )
+    const totalLength = await ContactUs.countDocuments({ state: paidState })
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: contacts,
+      totalLength
+    })
+  } catch (e) {
+    next(e);
+  }
+}
+const updateContact = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id || id.length < 24)
+      return next(ServerError.badRequest(400, 'withdrawal id not valid'));
+    const contact = await ContactUs.findById({ _id: id })
+    if (!contact)
+      return next(ServerError.badRequest(400, 'withdrawal id not valid'));
+    if (contact.state === 1)
+      return next(ServerError.badRequest(400, 'ticket is closed you can not update it'));
+    contact.state = 1;
+    await contact.save();
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      data: contact,
+    })
+  } catch (e) {
+    next(e)
+  }
+}
 module.exports = {
   Uploads,
   addAdmin,
@@ -1642,4 +1705,7 @@ module.exports = {
   getWithdrawalsByPaymentPhone,
   getAllWithdrawals,
   getUnpaidWithdrawals,
+  getAllContacts,
+  getClosedContacts,
+  updateContact
 }
