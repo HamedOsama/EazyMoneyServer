@@ -664,7 +664,7 @@ const getBuyerWithdrawals = async (req, res, next) => {
     // user.populate('buyerWithdrawals');
 
     const withdrawals = await ApiFeatures.pagination(
-      Withdrawal.find({ buyerId: req.user._id }), req.query
+      Withdrawal.find({ buyerId: req.user._id }).sort({ createdAt: -1 }), req.query
     )
     const totalLength = await Withdrawal.countDocuments({ buyerId: req.user._id });
     res.status(200).json({
@@ -698,7 +698,7 @@ const getLatestWithdrawals = async (req, res, next) => {
     const user = req.user
     if (user.role !== 'buyer')
       return next(ServerError.badRequest(401, 'not authorized'));
-    const withdrawals = await Withdrawal.find({ buyerId: req.user._id }).limit(5);
+    const withdrawals = await Withdrawal.find({ buyerId: req.user._id }).sort({ createdAt: -1 }).limit(5);
     res.status(200).json({
       ok: true,
       code: 200,
