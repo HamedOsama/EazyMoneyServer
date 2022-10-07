@@ -15,6 +15,7 @@ routes.route('/forget-password').put(usersController.forgetPassword)
 // routes.delete('/logout', auth, usersController.logout)
 // routes.use(auth)
 routes.route('/get-user').get(auth, usersController.getUser)
+routes.route('/get-user-info').get(auth, usersController.getUserInfo)
 //order
 routes.route('/order/seller').get(auth, usersController.getSellerOrders)
 routes.route('/order/buyer').get(auth, usersController.getBuyerOrders)

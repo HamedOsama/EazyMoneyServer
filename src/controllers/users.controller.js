@@ -329,6 +329,22 @@ const getBuyerOrderById = async (req, res, next) => {
     next(e);
   }
 }
+const getUserInfo = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return next(ServerError.badRequest(401, "token is not valid"));
+    }
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: user
+    })
+  } catch (e) {
+    next(e);
+  }
+}
 const getUser = async (req, res, next) => {
   try {
     // const userId = req.params.id
@@ -420,7 +436,6 @@ const getUser = async (req, res, next) => {
       // ...sellerData
       // withdrawnProfit,
       // balanceUnderReview
-
     })
   } catch (e) {
     // e.statusCode = 400
@@ -712,6 +727,7 @@ const getLatestWithdrawals = async (req, res, next) => {
 module.exports = {
   signup,
   getUser,
+  getUserInfo,
   login,
   logout,
   logoutAll,
