@@ -242,12 +242,15 @@ const deleteProduct = async (req, res, next) => {
 };
 const sellerGetOwn = async (req, res, next) => {
   try {
-    console.log(12)
-    await req.user.populate('products');
+    const products = await ApiFeatures.pagination(Product.find({
+      seller: req.user._id
+    }), req.query)
+    const totalLength = await Product.countDocuments({ seller: req.user._id });
     res.status(200).json({
       status: 200,
       message: 'succeeded',
-      data: req.user.products,
+      data: products,
+      totalLength
     });
   } catch (e) {
     next(e)
