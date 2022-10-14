@@ -1053,6 +1053,7 @@ const updateProduct = async (req, res, next) => {
     })
   }
   catch (e) {
+    console.log(e)
     // e.statusCode = 500
     next(e)
     // next(ServerError.badRequest(500, e.message))

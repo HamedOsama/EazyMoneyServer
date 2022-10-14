@@ -211,6 +211,7 @@ const updateProduct = async (req, res, next) => {
       body: product,
     });
   } catch (e) {
+    console.log(e)
     next(e)
     // next(ServerError.badRequest(500, e.message))
     // res.status(500).send(e.message);
