@@ -2,7 +2,7 @@ const express = require('express')
 const routes = express.Router()
 const usersController = require('../../../controllers/users.controller')
 const auth = require('../../../middleware/auh')
-const Uploads = require('../../../utils/uploadPhoto')
+const {Uploads} = require('../../../utils/uploadPhoto')
 
 routes.route('/signup').post(usersController.signup)
 routes.route('/login').post(usersController.login)

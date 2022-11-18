@@ -3,7 +3,7 @@ const routes = express.Router()
 const productsController = require('../../../controllers/products.controller')
 // const usersController = require('../../../controllers/users.controller')
 const auth = require('../../../middleware/auh')
-const Uploads = require('../../../utils/uploadPhoto')
+const {Uploads} = require('../../../utils/uploadPhoto')
 
 
 // routes do not need for authentication

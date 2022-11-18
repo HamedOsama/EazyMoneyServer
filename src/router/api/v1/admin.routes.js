@@ -2,7 +2,7 @@ const express = require('express')
 const routes = express.Router()
 const adminController = require('../../../controllers/admin.controller')
 const auth = require('../../../middleware/adminAuth')
-const Uploads = require('../../../utils/uploadPhoto')
+const {Uploads} = require('../../../utils/uploadPhoto')
 
 // routes do not need for authentication
 routes.route('/login').post(adminController.login)
