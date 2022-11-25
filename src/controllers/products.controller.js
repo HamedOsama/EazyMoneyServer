@@ -55,7 +55,7 @@ const getAll = async (req, res, next) => {
       status: 1
     }), req.query)
     // const test = await Product.updateMany({}, { image: [] }); // update many
-    const totalLength = await Product.countDocuments({});
+    const totalLength = await Product.countDocuments({status: 1});
     res.status(200).json({
       ok: true,
       code: 200,
@@ -107,10 +107,10 @@ const getProductById = async (req, res, next) => {
 const getProductsByCategory = async (req, res, next) => {
   try {
     const catName = req.params.category;
-    const products = await ApiFeatures.pagination(Product.find({ category: new RegExp(catName, 'i') })
+    const products = await ApiFeatures.pagination(Product.find({ category: new RegExp(catName, 'i') ,status: 1})
       , req.query)
     // const products = await Product.find({ category: new RegExp(catName, 'i') });
-    const totalLength = await Product.countDocuments({ category: new RegExp(catName, 'i') })
+    const totalLength = await Product.countDocuments({ category: new RegExp(catName, 'i') ,status: 1})
 
     res.status(200).json({
       ok: true,
@@ -133,9 +133,9 @@ const getProductsByName = async (req, res, next) => {
 
     // const products = await Product.find({ name: { $regex: new RegExp(productName, "i") } });
     const products = await ApiFeatures.pagination(
-      Product.find({ name: { $regex: new RegExp(productName, "i") } }),
+      Product.find({ name: { $regex: new RegExp(productName, "i") } , status: 1}),
       req.query)
-    const totalLength = await Product.countDocuments({ name: { $regex: new RegExp(productName, "i") } })
+    const totalLength = await Product.countDocuments({ name: { $regex: new RegExp(productName, "i")} ,status: 1 })
     res.status(200).json({
       ok: true,
       code: 200,
@@ -155,7 +155,7 @@ const getProductsBySellerID = async (req, res, next) => {
     console.log(req.params)
     // const products = await Product.find({ seller: sellerId });
     const products = await ApiFeatures.pagination(
-      Product.find({ seller: sellerId }),
+      Product.find({ seller: sellerId ,status: 1}),
       req.query)
     const totalLength = await Product.countDocuments({ seller: sellerId })
     res.status(200).json({
