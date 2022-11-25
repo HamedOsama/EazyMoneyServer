@@ -83,7 +83,7 @@ const userSchema = mongoose.Schema({
     payment_method: {
         type: String,
         default: '',
-        enum: ['', 'vodafone cash', 'orange cash', 'we cash', 'etisalat cash']
+        enum: ['vodafone cash', 'orange cash', 'we cash', 'etisalat cash']
     },
     payment_method_number: {
         type: String,
@@ -103,7 +103,8 @@ const userSchema = mongoose.Schema({
     // },
     tokens: [{
         type: String,
-        required: true
+        required: true,
+        select : false
     }],
     resetLink: {
         type: String,

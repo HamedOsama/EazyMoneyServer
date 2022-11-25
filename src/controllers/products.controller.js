@@ -176,33 +176,39 @@ const updateProduct = async (req, res, next) => {
     const productId = req.params.id;
     // if (req.user.id  !== product)
     // return next(ServerError.badRequest(400, 'sellerId cannot update!'))
-    // throw new Error('sellerId cannot update!');
+    // throw new Error('sellerId cannot update!'); 
     const keys = Object.keys(req.body);
     const notAllowed = ['_id', 'rate', 'sellPrice', 'numOfReviews', 'reviews', 'updatedAt', 'createdAt', 'status',];
     const inValid = keys.filter(el => notAllowed.includes(el));
     if (inValid.length > 0) {
       return next(ServerError.badRequest(401, `not allowed to update (${inValidUpdates.join(', ')})`))
     }
-    const product = await Product.findOneAndUpdate(
-      { _id: productId, seller: req.user._id },
-      req.body,
-
-      {
-        new: true,
-        runValidators: true,
-      }
+    const product = await Product.findOne(
+      { _id: productId, seller: req.user._id }
     );
+    
     if (!product) {
       return next(ServerError.badRequest(400, 'product not found'))
       // throw new Error('cannot find product')
     }
+    //check if price changed
+    if(req.body.originalPrice !== product.originalPrice){
+      product.status = 0;
+    }
+    //update product
+    product.update(
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      })
     const sum = product.properties.reduce((acc, el) => {
       return acc + el.amount
     }, 0)
     product.total_amount = sum;
-    if (req.file) {
-      product.image = req.file.filename;
-    }
+    // if (req.file) {
+    //   product.image = req.file.filename;
+    // }
     await product.save();
     res.status(200).json({
       ok: true,
