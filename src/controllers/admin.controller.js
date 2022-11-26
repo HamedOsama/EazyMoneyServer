@@ -1200,7 +1200,6 @@ const createOrder = async (req, res, next) => {
 
 const addMoreDataToOrder = async (orders) => {
   const newOrders = [];
-
   // await orders.map(async el => {
   if (!(orders instanceof Array)) {
     const product = await Product.findById({ _id: orders.productId });
@@ -1221,9 +1220,15 @@ const addMoreDataToOrder = async (orders) => {
     return newOrderForm;
   }
   for (const el of orders) {
-    const product = await Product.findById({ _id: el.productId });
-    const buyer = await User.findById({ _id: el.buyerId });
-    const seller = await User.findById({ _id: el.sellerId });
+    const [product , buyer , seller] =
+    await Promise.all([Product.findById({ _id: el.productId }),
+    User.findById({ _id: el.buyerId }),
+    User.findById({ _id: el.sellerId })
+  ])
+  // console.log(product)
+    // const product = await Product.findById({ _id: el.productId });
+    // const buyer = await User.findById({ _id: el.buyerId });
+    // const seller = await User.findById({ _id: el.sellerId });
     const newOrderForm = { ...el._doc };
     newOrderForm.OrderedProduct = product;
     newOrderForm.buyer = buyer;
