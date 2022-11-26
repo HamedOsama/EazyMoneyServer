@@ -73,10 +73,10 @@ const getBuyerData = async (user) => {
     returnedOrders,
   ] = await Promise.all([
     // Balance
-    (await Withdrawal.find({ buyerId: user._id, state: 0 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0),
-    (await Withdrawal.find({ buyerId: user._id, state: 1 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0),
-    (await Order.find({ buyerId: user._id, state: { $gte: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0),
-    (await Order.find({ buyerId: user._id, state: { $lt: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0),
+    Withdrawal.find({ buyerId: user._id, state: 0 }),
+    Withdrawal.find({ buyerId: user._id, state: 1 }),
+    Order.find({ buyerId: user._id, state: { $gte: 0 } }),
+    Order.find({ buyerId: user._id, state: { $lt: 0 } }),
     // Orders
     Order.countDocuments({ buyerId: user._id }),
     Order.countDocuments({ buyerId: user._id, orderState: 0 }),
@@ -92,11 +92,11 @@ const getBuyerData = async (user) => {
     Order.countDocuments({ buyerId: user._id, orderState: -5 }),
   ])
   // Balance
-  userData.pendingWithdrawals = pendingWithdrawals
-  userData.WithdrawnBalance = WithdrawnBalance
+  userData.pendingWithdrawals = pendingWithdrawals.reduce((acc, cur) => acc += cur.withdrawnAmount, 0)
+  userData.WithdrawnBalance = WithdrawnBalance.reduce((acc, cur) => acc += cur.withdrawnAmount, 0)
   userData.profit = userData.AvailableBalance + userData.WithdrawnBalance;
-  userData.pendingBalance = pendingBalance
-  userData.cancelledBalance = cancelledBalance
+  userData.pendingBalance = pendingBalance.reduce((acc, cur) => acc + cur.buyerCommission, 0)
+  userData.cancelledBalance = cancelledBalance.reduce((acc, cur) => acc + cur.buyerCommission, 0)
   // Orders
   userData.allOrders = allOrders
   userData.ordersUnderReview = ordersUnderReview
@@ -153,11 +153,11 @@ const getSellerData = async (user) => {
     ordersUnderProcess,
     ordersSentToShippingCompany,
     ordersShipped,
-    ordersFinished, ,
+    ordersFinished,
     cancelledOrders,
     cancelledOrdersByAdmin,
     cancelledOrdersBySeller,
-    cancelledOrdersByBuyer, ,
+    cancelledOrdersByBuyer,
     cancelledOrdersByCustomer,
     returnedOrders,
     //Products
@@ -179,8 +179,8 @@ const getSellerData = async (user) => {
     Order.countDocuments({ sellerId: user._id, orderState: -4 }),
     Order.countDocuments({ sellerId: user._id, orderState: -5 }),
     // Products
-    await Product.countDocuments({ seller: user._id }),
-    (await Product.find({ seller: user._id })).reduce((acc, cur) => acc + cur.total_amount, 0),
+    Product.countDocuments({ seller: user._id }),
+    Product.find({ seller: user._id }),
   ])
   // Orders
   userData.allOrders = allOrders
@@ -198,7 +198,8 @@ const getSellerData = async (user) => {
   userData.ratioOfFinishedOrdersToReturnedOrders = (userData.ordersFinished / (userData.ordersFinished + userData.returnedOrders)) * 100;
   // Products
   userData.allProducts = allProducts
-  userData.totalStock = totalStock
+  userData.totalStock = totalStock.reduce((acc, cur) => acc + cur.total_amount, 0)
+  // user.totalStock = 
   return userData;
 }
 const login = async (req, res, next) => {
