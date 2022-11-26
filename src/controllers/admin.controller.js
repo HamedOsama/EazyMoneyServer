@@ -1202,9 +1202,14 @@ const addMoreDataToOrder = async (orders) => {
   const newOrders = [];
   // await orders.map(async el => {
   if (!(orders instanceof Array)) {
-    const product = await Product.findById({ _id: orders.productId });
-    const buyer = await User.findById({ _id: orders.buyerId });
-    const seller = await User.findById({ _id: orders.sellerId });
+    const [product , buyer , seller] =
+    await Promise.all([Product.findById({ _id: orders.productId }),
+    User.findById({ _id: orders.buyerId }),
+    User.findById({ _id: orders.sellerId })
+  ])
+    // const product = await Product.findById({ _id: orders.productId });
+    // const buyer = await User.findById({ _id: orders.buyerId });
+    // const seller = await User.findById({ _id: orders.sellerId });
     const newOrderForm = { ...orders._doc };
     newOrderForm.OrderedProduct = product;
     newOrderForm.buyer = buyer;
@@ -1295,7 +1300,7 @@ const getOrdersBySellerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ sellerId: id }.sort('createdAt')),
+      Order.find({ sellerId: id }).sort({createdAt : -1}),
       req.query
     );
     const newOrdersForm = await addMoreDataToOrder(orders);
@@ -1317,7 +1322,7 @@ const getOrdersByBuyerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ buyerId: id }.sort('createdAt')),
+      Order.find({ buyerId: id }).sort({createdAt : -1}),
       req.query
     );
     const newOrdersForm = await addMoreDataToOrder(orders);
@@ -1572,7 +1577,7 @@ const getWithdrawalsByBuyerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'buyer id not valid'));
     const withdrawals = await ApiFeatures.pagination(
-      Withdrawal.find({ buyerId: id }.sort('createdAt')),
+      Withdrawal.find({ buyerId: id }).sort('createdAt'),
       req.query
     );
     const totalLength = await Withdrawal.countDocuments({ buyerId: id });
@@ -1594,7 +1599,7 @@ const getWithdrawalsByPaymentPhone = async (req, res, next) => {
     if (!phoneNumber || phoneNumber.length < 11)
       return next(ServerError.badRequest(400, 'phone number id not valid'));
     const withdrawals = await ApiFeatures.pagination(
-      Withdrawal.find({ payment_method_number: phoneNumber }.sort('createdAt')),
+      Withdrawal.find({ payment_method_number: phoneNumber }).sort('createdAt'),
       req.query
     );
     const totalLength = await Withdrawal.countDocuments({
