@@ -1242,7 +1242,7 @@ const addMoreDataToOrder = async (orders) => {
 };
 const getAllOrders = async (req, res, next) => {
   try {
-    const orders = await ApiFeatures.pagination(Order.find({}), req.query);
+    const orders = await ApiFeatures.pagination(Order.find({}).sort('-createdAt'), req.query);
     // const newOrders = [];
     // await orders.map(async el => {
     //   const product = await Product.findById({ _id: el.productId });
@@ -1290,7 +1290,7 @@ const getOrdersBySellerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ sellerId: id }),
+      Order.find({ sellerId: id }.sort('createdAt')),
       req.query
     );
     const newOrdersForm = await addMoreDataToOrder(orders);
@@ -1312,7 +1312,7 @@ const getOrdersByBuyerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ buyerId: id }),
+      Order.find({ buyerId: id }.sort('createdAt')),
       req.query
     );
     const newOrdersForm = await addMoreDataToOrder(orders);
@@ -1567,7 +1567,7 @@ const getWithdrawalsByBuyerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'buyer id not valid'));
     const withdrawals = await ApiFeatures.pagination(
-      Withdrawal.find({ buyerId: id }),
+      Withdrawal.find({ buyerId: id }.sort('createdAt')),
       req.query
     );
     const totalLength = await Withdrawal.countDocuments({ buyerId: id });
@@ -1589,7 +1589,7 @@ const getWithdrawalsByPaymentPhone = async (req, res, next) => {
     if (!phoneNumber || phoneNumber.length < 11)
       return next(ServerError.badRequest(400, 'phone number id not valid'));
     const withdrawals = await ApiFeatures.pagination(
-      Withdrawal.find({ payment_method_number: phoneNumber }),
+      Withdrawal.find({ payment_method_number: phoneNumber }.sort('createdAt')),
       req.query
     );
     const totalLength = await Withdrawal.countDocuments({
