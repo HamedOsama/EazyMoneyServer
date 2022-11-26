@@ -54,11 +54,11 @@ const getBuyerData = async (user) => {
   // orders
   const [
     //Balance
-pendingWithdrawals,
-WithdrawnBalance,
-pendingBalance,
-cancelledBalance,
-//Orders
+    pendingWithdrawals,
+    WithdrawnBalance,
+    pendingBalance,
+    cancelledBalance,
+    //Orders
     allOrders,
     ordersUnderReview,
     ordersUnderProcess,
@@ -72,11 +72,12 @@ cancelledBalance,
     cancelledOrdersByCustomer,
     returnedOrders,
   ] = await Promise.all([
-    //Balance
+    // Balance
     (await Withdrawal.find({ buyerId: user._id, state: 0 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0),
-(await Withdrawal.find({ buyerId: user._id, state: 1 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0),
-(await Order.find({ buyerId: user._id, state: { $gte: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0),
-(await Order.find({ buyerId: user._id, state: { $lt: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0),
+    (await Withdrawal.find({ buyerId: user._id, state: 1 })).reduce((acc, cur) => acc += cur.withdrawnAmount, 0),
+    (await Order.find({ buyerId: user._id, state: { $gte: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0),
+    (await Order.find({ buyerId: user._id, state: { $lt: 0 } })).reduce((acc, cur) => acc + cur.buyerCommission, 0),
+    // Orders
     Order.countDocuments({ buyerId: user._id }),
     Order.countDocuments({ buyerId: user._id, orderState: 0 }),
     Order.countDocuments({ buyerId: user._id, orderState: 1 }),
@@ -90,11 +91,13 @@ cancelledBalance,
     Order.countDocuments({ buyerId: user._id, orderState: -4 }),
     Order.countDocuments({ buyerId: user._id, orderState: -5 }),
   ])
+  // Balance
   userData.pendingWithdrawals = pendingWithdrawals
-userData.WithdrawnBalance = WithdrawnBalance
-userData.profit = userData.AvailableBalance + userData.WithdrawnBalance;
-userData.pendingBalance = pendingBalance
-userData.cancelledBalance = cancelledBalance
+  userData.WithdrawnBalance = WithdrawnBalance
+  userData.profit = userData.AvailableBalance + userData.WithdrawnBalance;
+  userData.pendingBalance = pendingBalance
+  userData.cancelledBalance = cancelledBalance
+  // Orders
   userData.allOrders = allOrders
   userData.ordersUnderReview = ordersUnderReview
   userData.ordersUnderProcess = ordersUnderProcess
@@ -126,23 +129,76 @@ userData.cancelledBalance = cancelledBalance
 const getSellerData = async (user) => {
   const userData = {}
   userData.user = { ...user._doc }
-  // orders
-  userData.allOrders = await Order.countDocuments({ sellerId: user._id });
-  userData.ordersUnderReview = await Order.countDocuments({ sellerId: user._id, orderState: 0 });
-  userData.ordersUnderProcess = await Order.countDocuments({ sellerId: user._id, orderState: 1 });
-  userData.ordersSentToShippingCompany = await Order.countDocuments({ sellerId: user._id, orderState: 2 });
-  userData.ordersShipped = await Order.countDocuments({ sellerId: user._id, orderState: 3 });
-  userData.ordersFinished = await Order.countDocuments({ sellerId: user._id, orderState: 4 });
-  userData.cancelledOrders = await Order.countDocuments({ sellerId: user._id, orderState: { $lte: -1 } });
-  userData.cancelledOrdersByAdmin = await Order.countDocuments({ sellerId: user._id, orderState: -1 });
-  userData.cancelledOrdersBySeller = await Order.countDocuments({ sellerId: user._id, orderState: -2 });
-  userData.cancelledOrdersByBuyer = await Order.countDocuments({ sellerId: user._id, orderState: -3 });
-  userData.cancelledOrdersByCustomer = await Order.countDocuments({ sellerId: user._id, orderState: -4 });
-  userData.returnedOrders = await Order.countDocuments({ sellerId: user._id, orderState: -5 });
+  // // orders
+  // userData.allOrders = await Order.countDocuments({ sellerId: user._id });
+  // userData.ordersUnderReview = await Order.countDocuments({ sellerId: user._id, orderState: 0 });
+  // userData.ordersUnderProcess = await Order.countDocuments({ sellerId: user._id, orderState: 1 });
+  // userData.ordersSentToShippingCompany = await Order.countDocuments({ sellerId: user._id, orderState: 2 });
+  // userData.ordersShipped = await Order.countDocuments({ sellerId: user._id, orderState: 3 });
+  // userData.ordersFinished = await Order.countDocuments({ sellerId: user._id, orderState: 4 });
+  // userData.cancelledOrders = await Order.countDocuments({ sellerId: user._id, orderState: { $lte: -1 } });
+  // userData.cancelledOrdersByAdmin = await Order.countDocuments({ sellerId: user._id, orderState: -1 });
+  // userData.cancelledOrdersBySeller = await Order.countDocuments({ sellerId: user._id, orderState: -2 });
+  // userData.cancelledOrdersByBuyer = await Order.countDocuments({ sellerId: user._id, orderState: -3 });
+  // userData.cancelledOrdersByCustomer = await Order.countDocuments({ sellerId: user._id, orderState: -4 });
+  // userData.returnedOrders = await Order.countDocuments({ sellerId: user._id, orderState: -5 });
+  // userData.ratioOfFinishedOrdersToReturnedOrders = (userData.ordersFinished / (userData.ordersFinished + userData.returnedOrders)) * 100;
+  // // products
+  // userData.allProducts = await Product.countDocuments({ seller: user._id });
+  // userData.totalStock = (await Product.find({ seller: user._id })).reduce((acc, cur) => acc + cur.total_amount, 0);
+  const [
+    // Orders
+    allOrders,
+    ordersUnderReview,
+    ordersUnderProcess,
+    ordersSentToShippingCompany,
+    ordersShipped,
+    ordersFinished, ,
+    cancelledOrders,
+    cancelledOrdersByAdmin,
+    cancelledOrdersBySeller,
+    cancelledOrdersByBuyer, ,
+    cancelledOrdersByCustomer,
+    returnedOrders,
+    //Products
+    allProducts,
+    totalStock,
+
+  ] = await Promise.all([
+    // Orders
+    Order.countDocuments({ sellerId: user._id }),
+    Order.countDocuments({ sellerId: user._id, orderState: 0 }),
+    Order.countDocuments({ sellerId: user._id, orderState: 1 }),
+    Order.countDocuments({ sellerId: user._id, orderState: 2 }),
+    Order.countDocuments({ sellerId: user._id, orderState: 3 }),
+    Order.countDocuments({ sellerId: user._id, orderState: 4 }),
+    Order.countDocuments({ sellerId: user._id, orderState: { $lte: -1 } }),
+    Order.countDocuments({ sellerId: user._id, orderState: -1 }),
+    Order.countDocuments({ sellerId: user._id, orderState: -2 }),
+    Order.countDocuments({ sellerId: user._id, orderState: -3 }),
+    Order.countDocuments({ sellerId: user._id, orderState: -4 }),
+    Order.countDocuments({ sellerId: user._id, orderState: -5 }),
+    // Products
+    await Product.countDocuments({ seller: user._id }),
+    (await Product.find({ seller: user._id })).reduce((acc, cur) => acc + cur.total_amount, 0),
+  ])
+  // Orders
+  userData.allOrders = allOrders
+  userData.ordersUnderReview = ordersUnderReview
+  userData.ordersUnderProcess = ordersUnderProcess
+  userData.ordersSentToShippingCompany = ordersSentToShippingCompany
+  userData.ordersShipped = ordersShipped
+  userData.ordersFinished = ordersFinished
+  userData.cancelledOrders = cancelledOrders
+  userData.cancelledOrdersByAdmin = cancelledOrdersByAdmin
+  userData.cancelledOrdersBySeller = cancelledOrdersBySeller
+  userData.cancelledOrdersByBuyer = cancelledOrdersByBuyer
+  userData.cancelledOrdersByCustomer = cancelledOrdersByCustomer
+  userData.returnedOrders = returnedOrders
   userData.ratioOfFinishedOrdersToReturnedOrders = (userData.ordersFinished / (userData.ordersFinished + userData.returnedOrders)) * 100;
-  // products
-  userData.allProducts = await Product.countDocuments({ seller: user._id });
-  userData.totalStock = (await Product.find({ seller: user._id })).reduce((acc, cur) => acc + cur.total_amount, 0);
+  // Products
+  userData.allProducts = allProducts
+  userData.totalStock = totalStock
   return userData;
 }
 const login = async (req, res, next) => {
