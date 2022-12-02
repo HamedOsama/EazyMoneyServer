@@ -78,12 +78,21 @@ const login = async (req, res, next) => {
 };
 const getWebsiteStatistics = async () => {
   const year = new Date().getFullYear();
-  const users = await User.countDocuments();
-  const sellers = await User.countDocuments({ role: 'seller' });
-  const buyers = await User.countDocuments({ role: 'buyer' });
-  const products = await Product.count({});
-  const orders = await Order.countDocuments();
-  const withdrawals = await Withdrawal.countDocuments();
+  // const users = await User.countDocuments();
+  // const sellers = await User.countDocuments({ role: 'seller' });
+  // const buyers = await User.countDocuments({ role: 'buyer' });
+  // const products = await Product.count({});
+  // const orders = await Order.countDocuments();
+  // const withdrawals = await Withdrawal.countDocuments();
+  const [users, sellers, buyers, products, orders, withdrawals] =
+    await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'seller' }),
+      User.countDocuments({ role: 'buyer' }),
+      Product.countDocuments(),
+      Order.countDocuments(),
+      Withdrawal.countDocuments(),
+    ])
   const productsChart = new Array(12).fill(0);
   const withdrawalsChart = new Array(12).fill(0);
   const ordersChart = new Array(12).fill(0);
@@ -91,31 +100,120 @@ const getWebsiteStatistics = async () => {
   const createdBuyersChart = new Array(12).fill(0);
   const blockedSellersChart = new Array(12).fill(0);
   const blockedBuyersChart = new Array(12).fill(0);
-  const ordersThisYear = await Order.find({
+  // const ordersThisYear = await Order.find({
+  //   createdAt: {
+  //     $gte: new Date(`${year}-1`),
+  //     $lte: new Date(`${year}-12`),
+  //   },
+  // });
+  // const withdrawalsThisYear = await Withdrawal.find({
+  //   createdAt: {
+  //     $gte: new Date(`${year}-1`),
+  //     $lte: new Date(`${year}-12`),
+  //   },
+  // });
+  // const productThisYear = await Product.find({
+  //   createdAt: {
+  //     $gte: new Date(`${year}-1`),
+  //     $lte: new Date(`${year}-12`),
+  //   },
+  // });
+  const ordersThisYear = Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: new Date(`${year}-1`),
+          $lte: new Date(`${year}-12`),
+        }
+      }
+    },
+    {
+      $group: {
+        _id: { $month: '$createdAt' },
+        total: { $sum: 1 }
+      }
+    },
+    {
+      $addFields: { month: '$_id' }
+    },
+    {
+      $project: {
+        _id: 0
+      }
+    },
+    {
+      $sort: {
+        month: 1
+      }
+    }
+  ])
+  const withdrawalsThisYear = Withdrawal.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: new Date(`${year}-1`),
+          $lte: new Date(`${year}-12`),
+        }
+      }
+    },
+    {
+      $group: {
+        _id: { $month: '$createdAt' },
+        total: { $sum: 1 }
+      }
+    },
+    {
+      $addFields: { month: '$_id' }
+    },
+    {
+      $project: {
+        _id: 0
+      }
+    },
+    {
+      $sort: {
+        month: 1
+      }
+    }
+  ])
+
+  const usersThisYear = User.find({
     createdAt: {
       $gte: new Date(`${year}-1`),
       $lte: new Date(`${year}-12`),
     },
   });
-  const withdrawalsThisYear = await Withdrawal.find({
-    createdAt: {
-      $gte: new Date(`${year}-1`),
-      $lte: new Date(`${year}-12`),
+  const productThisYear = Product.aggregate([
+    {
+      $group: {
+        _id: { $month: '$createdAt' },
+        totalProducts: { $sum: 1 },
+      }
     },
-  });
-  const usersThisYear = await User.find({
-    createdAt: {
-      $gte: new Date(`${year}-1`),
-      $lte: new Date(`${year}-12`),
+    {
+      $addFields: {
+        month: '$_id'
+      }
     },
-  });
-  const productThisYear = await Product.find({
-    createdAt: {
-      $gte: new Date(`${year}-1`),
-      $lte: new Date(`${year}-12`),
+    {
+      $project: {
+        _id: 0
+      }
     },
-  });
-  usersThisYear.forEach((el) => {
+    {
+      $sort: {
+        month: 1
+      }
+    }
+  ])
+
+  const [orderStats, withdrawalStats, userStats, productStats] = await Promise.all(
+    [ordersThisYear,
+      withdrawalsThisYear,
+      usersThisYear,
+      productThisYear
+    ])
+  userStats.forEach((el) => {
     const index = el.createdAt.getMonth();
     el.role === 'seller'
       ? createdSellersChart[index]++
@@ -125,17 +223,20 @@ const getWebsiteStatistics = async () => {
         ? blockedSellersChart[index]++
         : blockedBuyersChart[index]++;
   });
-  productThisYear.forEach((el) => {
-    const index = el.createdAt.getMonth();
-    productsChart[index]++;
+  productStats.forEach((el) => {
+    // const index = el.createdAt.getMonth();
+    // productsChart[index]++;
+    productsChart[el.month - 1] = el.totalProducts;
   });
-  ordersThisYear.forEach((el) => {
-    const index = el.createdAt.getMonth();
-    ordersChart[index]++;
+  orderStats.forEach((el) => {
+    // const index = el.createdAt.getMonth();
+    // ordersChart[index]++;
+    ordersChart[el.month - 1] = el.total;
   });
-  withdrawalsThisYear.forEach((el) => {
-    const index = el.createdAt.getMonth();
-    withdrawalsChart[index]++;
+  withdrawalStats.forEach((el) => {
+    // const index = el.createdAt.getMonth();
+    // withdrawalsChart[index]++;
+    withdrawalsChart[el.month - 1] = el.total;
   });
   return {
     users,
@@ -818,8 +919,8 @@ const getBuyerOrSellerByPhoneNumber = async (req, res, next) => {
 };
 const addProduct = async (req, res, next) => {
   try {
-    if(req?.body?.image <= 1 || !req.body.image )
-    return next(ServerError.badRequest(400, 'add one image at least'));
+    if (req?.body?.image <= 1 || !req.body.image)
+      return next(ServerError.badRequest(400, 'add one image at least'));
     const product = new Product(req.body);
     // const filesPaths = [];
     // if (req.files) {
@@ -1202,11 +1303,11 @@ const addMoreDataToOrder = async (orders) => {
   const newOrders = [];
   // await orders.map(async el => {
   if (!(orders instanceof Array)) {
-    const [product , buyer , seller] =
-    await Promise.all([Product.findById({ _id: orders.productId }),
-    User.findById({ _id: orders.buyerId }),
-    User.findById({ _id: orders.sellerId })
-  ])
+    const [product, buyer, seller] =
+      await Promise.all([Product.findById({ _id: orders.productId }),
+      User.findById({ _id: orders.buyerId }),
+      User.findById({ _id: orders.sellerId })
+      ])
     // const product = await Product.findById({ _id: orders.productId });
     // const buyer = await User.findById({ _id: orders.buyerId });
     // const seller = await User.findById({ _id: orders.sellerId });
@@ -1225,12 +1326,12 @@ const addMoreDataToOrder = async (orders) => {
     return newOrderForm;
   }
   for (const el of orders) {
-    const [product , buyer , seller] =
-    await Promise.all([Product.findById({ _id: el.productId }),
-    User.findById({ _id: el.buyerId }),
-    User.findById({ _id: el.sellerId })
-  ])
-  // console.log(product)
+    const [product, buyer, seller] =
+      await Promise.all([Product.findById({ _id: el.productId }),
+      User.findById({ _id: el.buyerId }),
+      User.findById({ _id: el.sellerId })
+      ])
+    // console.log(product)
     // const product = await Product.findById({ _id: el.productId });
     // const buyer = await User.findById({ _id: el.buyerId });
     // const seller = await User.findById({ _id: el.sellerId });
@@ -1300,7 +1401,7 @@ const getOrdersBySellerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ sellerId: id }).sort({createdAt : -1}),
+      Order.find({ sellerId: id }).sort({ createdAt: -1 }),
       req.query
     );
     const newOrdersForm = await addMoreDataToOrder(orders);
@@ -1322,7 +1423,7 @@ const getOrdersByBuyerId = async (req, res, next) => {
     if (!id || id.length < 24)
       return next(ServerError.badRequest(400, 'order id not valid'));
     const orders = await ApiFeatures.pagination(
-      Order.find({ buyerId: id }).sort({createdAt : -1}),
+      Order.find({ buyerId: id }).sort({ createdAt: -1 }),
       req.query
     );
     const newOrdersForm = await addMoreDataToOrder(orders);

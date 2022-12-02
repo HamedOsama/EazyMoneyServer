@@ -7,6 +7,7 @@ const {Uploads} = require('../../../utils/uploadPhoto')
 
 
 // routes do not need for authentication
+routes.route('/get-status').get(productsController.getProductStatus)
 routes.route('/get-all').get(productsController.getAll)
 routes.route('/get-all-categories').get(productsController.getAllCat)
 routes.route('/id/:id').get(productsController.getProductById)

@@ -27,6 +27,10 @@ app.use('/images', express.static(path.join(__dirname, "./src/uploads")));
 app.get('/', (req, res) => {
   res.send('hello world')
 })
+app.post('/test',(req,res)=>{
+  console.log(req.body);
+  res.status(204).send('');
+})
 
 // api routes
 app.use('/api/v1', routes)

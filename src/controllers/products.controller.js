@@ -13,7 +13,43 @@ const Uploads = multer({
   },
 });
 
-
+const getProductStatus = async (req,res,next) =>{
+  try {
+    const productStatus = await Product.aggregate([
+      {
+        $group : {
+          _id : { $month : '$createdAt'},
+          products : {$sum : 1},
+        }
+      },
+      {
+        $addFields : {
+          month : '$_id'
+        }
+      },
+      {
+        $project : {
+          _id : 0
+        }
+      },
+      {
+        $sort : {month : 1}
+      },
+    ])
+    const status = Array(12).fill(0);
+    productStatus.forEach(el => {
+      status[el.month - 1]  = el.products;
+    })
+    res.status(200).json({
+      ok: true,
+      code: 200,
+      message: 'succeeded',
+      body: status,
+    });
+  } catch (e) {
+    next(e)
+  }
+}
 const createProduct = async (req, res, next) => {
   try {
     if (req.user.role != 'seller') {
@@ -266,6 +302,7 @@ const sellerGetOwn = async (req, res, next) => {
   }
 };
 module.exports = {
+  getProductStatus,
   createProduct,
   getAll,
   getAllCat,

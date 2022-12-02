@@ -6,6 +6,7 @@ const auth = async (req, res, next) => {
         // console.log(token)
         const decode = jwt.verify(token, 'AdminToken')
         const admin = await Admin.findOne({ _id: decode._id, token })
+        admin.token = null
         // console.log(admin)
         if (!admin)
             throw new Error('')
