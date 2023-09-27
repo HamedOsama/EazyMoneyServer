@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "vercel-build": "echo build"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +24,7 @@
     "mongoose-timestamp": "^0.6.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "pusher": "^5.1.2",
     "swagger-jsdoc": "^6.2.5",
     "swagger-ui-express": "^4.5.0",
     "validator": "^13.7.0",
